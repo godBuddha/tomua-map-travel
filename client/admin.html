@@ -2030,11 +2030,19 @@
         description: { vi: descVi, en: descVi },
         color,
         status,
-        image_url: imageUrl,
-        stats: Object.keys(stats).length > 0 ? { vi: stats, en: stats } : null,
-        info: Object.keys(info).length > 0 ? { vi: info, en: info } : null,
-        visitor_notes: visitor_notes.length > 0 ? visitor_notes : null
+        image_url: imageUrl
       };
+      
+      // Only include optional fields if they have values
+      if (Object.keys(stats).length > 0) {
+        data.stats = { vi: stats, en: stats };
+      }
+      if (Object.keys(info).length > 0) {
+        data.info = { vi: info, en: info };
+      }
+      if (visitor_notes.length > 0) {
+        data.visitor_notes = visitor_notes;
+      }
       
       if (Object.keys(finalMetadata).length > 0) {
         data.metadata = finalMetadata;

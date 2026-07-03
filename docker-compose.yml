@@ -44,6 +44,8 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
       UPLOAD_DIR: /app/uploads
       REDIS_URL: redis://redis:6379
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123456}
+      CTV_PASSWORD: ${CTV_PASSWORD:-ctv123456}
     volumes:
       - uploads_data:/app/uploads
       - ./client:/app/client:ro
