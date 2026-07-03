@@ -1,0 +1,44 @@
+{
+  "admin.sidebar.subtitle": "Quản trị hệ thống",
+  "admin.sidebar.sectionOverview": "Tổng quan",
+  "admin.sidebar.dashboard": "Bảng điều khiển",
+  "admin.sidebar.sectionContent": "Nội dung",
+  "admin.sidebar.destinations": "Điểm du lịch",
+  "admin.sidebar.tours": "Lộ trình / Tour",
+  "admin.sidebar.events": "Sự kiện",
+  "admin.sidebar.sectionSystem": "Hệ thống",
+  "admin.sidebar.content": "Quản lý nội dung",
+  "admin.sidebar.users": "Người dùng",
+  "admin.sidebar.languages": "Ngôn ngữ",
+  "admin.sidebar.settings": "Cài đặt",
+  "admin.sidebar.role": "Quản trị viên",
+  "admin.sidebar.logout": "Đăng xuất",
+  
+  "admin.topbar.title": "Bảng điều khiển",
+  "admin.topbar.viewSite": "Xem trang công khai",
+  "admin.topbar.map": "Bản đồ",
+  "admin.topbar.logout": "Đăng xuất",
+  
+  "admin.dashboard.destinationsCount": "Điểm du lịch",
+  "admin.dashboard.languagesCount": "Ngôn ngữ",
+  "admin.dashboard.usersCount": "Người dùng",
+  "admin.dashboard.upcomingEvents": "Sự kiện sắp tới",
+  "admin.dashboard.recentDestinations": "Điểm du lịch gần đây",
+  
+  "admin.common.viewAll": "Xem tất cả",
+  "admin.common.name": "Tên",
+  "admin.common.type": "Loại",
+  "admin.common.status": "Trạng thái",
+  
+  "collab.sidebar.subtitle": "Bản đồ du lịch số",
+  "collab.sidebar.roleTag": "Cộng tác viên",
+  "collab.sidebar.role": "Cộng tác viên",
+  
+  "collab.welcome.title": "Chào mừng, Cộng tác viên!",
+  "collab.welcome.desc": "Bạn có thể quản lý điểm du lịch, tạo lộ trình và thêm sự kiện. Mọi thay đổi sẽ được kiểm duyệt trước khi hiển thị trên trang công khai.",
+  "collab.welcome.permDest": "Quản lý điểm du lịch",
+  "collab.welcome.permTour": "Tạo lộ trình",
+  "collab.welcome.permEvent": "Quản lý sự kiện",
+  "collab.welcome.permUser": "Quản lý người dùng",
+  "collab.welcome.permSettings": "Cài đặt hệ thống"
+}

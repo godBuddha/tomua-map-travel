@@ -1,0 +1,22 @@
+{
+  "name": "tomua-map-travel",
+  "version": "1.0.0",
+  "main": "seed_detail.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "acorn": "^8.17.0",
+    "i18next": "^26.3.3",
+    "i18next-browser-languagedetector": "^8.2.1",
+    "i18next-http-backend": "^4.0.0",
+    "puppeteer": "^25.2.1"
+  }
+}
