@@ -20,7 +20,9 @@ const storage = multer.diskStorage({
     cb(null, uploadPath);
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
+    // Security: Use MIME type to determine extension, not originalname (prevents HTML/JS upload)
+    const EXT_BY_MIME = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
+    const ext = EXT_BY_MIME[file.mimetype] || '.bin';
     const filename = `${Date.now()}-${uuidv4().substring(0, 8)}${ext}`;
     cb(null, filename);
   }

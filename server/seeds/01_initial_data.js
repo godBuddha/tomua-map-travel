@@ -1,6 +1,10 @@
 const bcrypt = require('bcryptjs');
 
 exports.seed = async function(knex) {
+  // Security: Use environment variables for default passwords
+  const adminPassword = process.env.ADMIN_PASSWORD || 'CHANGE_ME_ON_FIRST_LOGIN';
+  const ctvPassword = process.env.CTV_PASSWORD || 'CHANGE_ME_ON_FIRST_LOGIN';
+
   // Clear existing data
   await knex('approval_comments').del();
   await knex('route_stops').del();
@@ -13,7 +17,7 @@ exports.seed = async function(knex) {
   await knex('users').del();
 
   // Create admin user
-  const adminPasswordHash = await bcrypt.hash('admin123456', 10);
+  const adminPasswordHash = await bcrypt.hash(adminPassword, 12);
   const [admin] = await knex('users').insert({
     name: 'Administrator',
     email: 'admin@tomua.vn',
@@ -24,7 +28,7 @@ exports.seed = async function(knex) {
   }).returning('id');
 
   // Create collaborator user
-  const ctvPasswordHash = await bcrypt.hash('ctv123456', 10);
+  const ctvPasswordHash = await bcrypt.hash(ctvPassword, 12);
   const [collaborator] = await knex('users').insert({
     name: 'Cộng tác viên 1',
     email: 'ctv1@tomua.vn',

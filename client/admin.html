@@ -671,6 +671,40 @@
             </div>
           </div>
         </div>
+
+        <div class="panel">
+          <div class="panel-header"><h3>🔐 Bảo mật tài khoản</h3></div>
+          <div class="panel-body padded">
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+              <div>
+                <div style="font-weight:600; margin-bottom:4px;">Xác thực hai yếu tố (2FA)</div>
+                <div style="font-size:13px; color:var(--muted);" id="mfaStatusText">Đang kiểm tra...</div>
+              </div>
+              <button class="btn btn-primary btn-sm" id="mfaToggleBtn" onclick="toggleMfa()">Bật 2FA</button>
+            </div>
+            <div id="mfaSetupSection" style="display:none;">
+              <div style="background:var(--bg); padding:16px; border-radius:8px; margin-bottom:16px;">
+                <div style="font-size:13px; margin-bottom:8px;">Quét mã QR bằng ứng dụng xác thực:</div>
+                <div id="mfaQrCode" style="text-align:center; margin-bottom:12px;"></div>
+                <div style="font-size:12px; color:var(--muted); text-align:center;">Hoặc nhập mã: <code id="mfaSecret" style="background:var(--surface); padding:2px 6px; border-radius:4px;"></code></div>
+              </div>
+              <div style="margin-bottom:12px;">
+                <label style="font-size:13px; font-weight:600;">Mã xác thực từ ứng dụng:</label>
+                <input type="text" id="mfaVerifyToken" placeholder="000000" maxlength="6" style="width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-family:var(--font);">
+              </div>
+              <div style="display:flex; gap:8px;">
+                <button class="btn btn-primary btn-sm" onclick="enableMfa()">Xác nhận & Bật</button>
+                <button class="btn btn-outline btn-sm" onclick="cancelMfaSetup()">Hủy</button>
+              </div>
+            </div>
+            <div id="mfaBackupSection" style="display:none; margin-top:16px; padding-top:16px; border-top:1px solid var(--border);">
+              <div style="font-weight:600; margin-bottom:8px;">Mã dự phòng</div>
+              <div style="font-size:13px; color:var(--muted); margin-bottom:12px;">Lưu các mã này ở nơi an toàn. Mỗi mã chỉ sử dụng được một lần.</div>
+              <div id="mfaBackupCodes" style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:12px;"></div>
+              <button class="btn btn-outline btn-sm" onclick="regenerateBackupCodes()">Tạo mã mới</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- CONTENT MANAGEMENT VIEW -->
@@ -1352,7 +1386,7 @@
             tbody.innerHTML = recentDest.data.items.map(d => {
               const lat = d.lat || 0;
               const lng = d.lng || 0;
-              const name = d.name.vi || d.name.en;
+              const name = escapeHtml(d.name.vi || d.name.en);
               const typeLabels = { 
                 waterfall: I18nNew.getCommon('type.waterfall', 'Thác nước'), 
                 cave: I18nNew.getCommon('type.cave', 'Hang động'), 
@@ -1393,7 +1427,7 @@
                 
                 return `<div class="user-card">
                   <div class="user-avatar" style="background:${avatarColor};">${initial}</div>
-                  <div class="user-info"><h4>${u.name}</h4><p>${u.username} · ${roleLabels[u.role] || u.role}</p></div>
+                  <div class="user-info"><h4>${escapeHtml(u.name)}</h4><p>${u.username} · ${roleLabels[u.role] || u.role}</p></div>
                   <span class="badge badge-green">Online</span>
                 </div>`;
               }).join('');
@@ -1429,7 +1463,7 @@
             tbody.innerHTML = result.data.items.map(d => {
               const lat = d.lat || 0;
               const lng = d.lng || 0;
-              const name = d.name.vi || d.name.en;
+              const name = escapeHtml(d.name.vi || d.name.en);
               const typeLabels = { 
                 waterfall: I18nNew.getCommon('type.waterfall', 'Thác nước'), 
                 cave: I18nNew.getCommon('type.cave', 'Hang động'), 
@@ -1490,7 +1524,7 @@
               const statusClasses = { active: 'badge-green', inactive: 'badge-gray' };
               
               return `<tr>
-                <td><div class="dest-name"><div class="dest-dot" style="background:var(--accent);"></div>${u.name}</div></td>
+                <td><div class="dest-name"><div class="dest-dot" style="background:var(--accent);"></div>${escapeHtml(u.name)}</div></td>
                 <td>${u.username || '—'}</td>
                 <td><span class="badge ${roleClasses[u.role] || 'badge-gray'}">${roleLabels[u.role] || u.role}</span></td>
                 <td><span class="badge ${statusClasses[u.status] || 'badge-gray'}">${statusLabels[u.status] || u.status}</span></td>
@@ -1596,6 +1630,150 @@
 
     // Load settings on page load
     loadSettings();
+
+    // === MFA MANAGEMENT ===
+    let mfaEnabled = false;
+    let mfaSetupData = null;
+
+    async function checkMfaStatus() {
+      try {
+        const result = await apiRequest('/mfa/status');
+        if (result.success) {
+          mfaEnabled = result.data.mfa_enabled;
+          updateMfaUI();
+        }
+      } catch (error) {
+        console.error('Error checking MFA status:', error);
+      }
+    }
+
+    function updateMfaUI() {
+      const statusText = document.getElementById('mfaStatusText');
+      const toggleBtn = document.getElementById('mfaToggleBtn');
+      const setupSection = document.getElementById('mfaSetupSection');
+      const backupSection = document.getElementById('mfaBackupSection');
+
+      if (mfaEnabled) {
+        statusText.textContent = '✅ Đã bật';
+        statusText.style.color = 'var(--success)';
+        toggleBtn.textContent = 'Tắt 2FA';
+        toggleBtn.className = 'btn btn-danger btn-sm';
+        setupSection.style.display = 'none';
+        backupSection.style.display = 'block';
+      } else {
+        statusText.textContent = '❌ Chưa bật';
+        statusText.style.color = 'var(--danger)';
+        toggleBtn.textContent = 'Bật 2FA';
+        toggleBtn.className = 'btn btn-primary btn-sm';
+        setupSection.style.display = 'none';
+        backupSection.style.display = 'none';
+      }
+    }
+
+    async function toggleMfa() {
+      if (mfaEnabled) {
+        // Disable MFA
+        const token = prompt('Nhập mã xác thực từ ứng dụng để tắt 2FA:');
+        if (!token) return;
+
+        try {
+          const result = await apiRequest('/mfa/disable', {
+            method: 'POST',
+            body: JSON.stringify({ token })
+          });
+          if (result.success) {
+            mfaEnabled = false;
+            updateMfaUI();
+            alert('Đã tắt xác thực hai yếu tố');
+          } else {
+            alert('Lỗi: ' + (result.message || 'Không thể tắt 2FA'));
+          }
+        } catch (error) {
+          alert('Lỗi: ' + error.message);
+        }
+      } else {
+        // Start MFA setup
+        try {
+          const result = await apiRequest('/mfa/setup', { method: 'POST' });
+          if (result.success) {
+            mfaSetupData = result.data;
+            showMfaSetup();
+          }
+        } catch (error) {
+          alert('Lỗi: ' + error.message);
+        }
+      }
+    }
+
+    function showMfaSetup() {
+      document.getElementById('mfaSetupSection').style.display = 'block';
+      document.getElementById('mfaSecret').textContent = mfaSetupData.secret;
+      
+      // Generate QR code using external API
+      const qrDiv = document.getElementById('mfaQrCode');
+      const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(mfaSetupData.otpauthUrl)}`;
+      qrDiv.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="max-width:200px;">`;
+      
+      // Show backup codes
+      const backupDiv = document.getElementById('mfaBackupCodes');
+      backupDiv.innerHTML = mfaSetupData.backupCodes.map(code => 
+        `<div style="background:var(--surface); padding:6px 10px; border-radius:6px; font-family:monospace; font-size:13px; text-align:center;">${code}</div>`
+      ).join('');
+    }
+
+    async function enableMfa() {
+      const token = document.getElementById('mfaVerifyToken').value.trim();
+      if (!token || token.length !== 6) {
+        alert('Vui lòng nhập mã 6 số từ ứng dụng xác thực');
+        return;
+      }
+
+      try {
+        const result = await apiRequest('/mfa/enable', {
+          method: 'POST',
+          body: JSON.stringify({ token })
+        });
+        if (result.success) {
+          mfaEnabled = true;
+          updateMfaUI();
+          document.getElementById('mfaBackupSection').style.display = 'block';
+          alert('Đã bật xác thực hai yếu tố! Hãy lưu mã dự phòng ở nơi an toàn.');
+        } else {
+          alert('Lỗi: ' + (result.message || 'Mã xác thực không đúng'));
+        }
+      } catch (error) {
+        alert('Lỗi: ' + error.message);
+      }
+    }
+
+    function cancelMfaSetup() {
+      document.getElementById('mfaSetupSection').style.display = 'none';
+      document.getElementById('mfaVerifyToken').value = '';
+    }
+
+    async function regenerateBackupCodes() {
+      const token = prompt('Nhập mã xác thực từ ứng dụng để tạo mã dự phòng mới:');
+      if (!token) return;
+
+      try {
+        const result = await apiRequest('/mfa/regenerate-backup-codes', {
+          method: 'POST',
+          body: JSON.stringify({ token })
+        });
+        if (result.success) {
+          const backupDiv = document.getElementById('mfaBackupCodes');
+          backupDiv.innerHTML = result.data.backupCodes.map(code => 
+            `<div style="background:var(--surface); padding:6px 10px; border-radius:6px; font-family:monospace; font-size:13px; text-align:center;">${code}</div>`
+          ).join('');
+          alert('Đã tạo mã dự phòng mới! Hãy lưu ở nơi an toàn.');
+        }
+      } catch (error) {
+        alert('Lỗi: ' + error.message);
+      }
+    }
+
+    // Check MFA status on page load
+    checkMfaStatus();
 
     // === LOGOUT ===
     function handleLogout() {
@@ -2036,7 +2214,7 @@
             routeList.style.display = 'grid';
             
             const html = result.data.items.map(route => {
-              const name = route.name.vi || route.name.en || 'Unknown';
+              const name = escapeHtml(route.name.vi || route.name.en || "Unknown");
               const desc = route.description?.vi || route.description?.en || '';
               const transportLabels = { walk: '🚶 Đi bộ', bike: '🏍️ Xe máy', car: '🚗 Ô tô' };
               const difficultyLabels = { easy: 'Dễ', medium: 'Trung bình', hard: 'Khó' };
@@ -2160,9 +2338,9 @@
           section.style.display = 'block';
           container.innerHTML = result.data.map(c => `
             <div style="padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;">
-              <strong>${c.user_name || 'Ẩn danh'}</strong>
+              <strong>${escapeHtml(c.user_name || "Ẩn danh")}</strong>
               <span style="color:var(--muted); margin-left:8px;">${new Date(c.created_at).toLocaleDateString('vi-VN')}</span>
-              <p style="margin:4px 0 0;">${c.comment}</p>
+              <p style="margin:4px 0 0;">${escapeHtml(c.comment)}</p>
             </div>
           `).join('');
         } else {
@@ -2253,7 +2431,7 @@
             const statusClasses = { draft: 'badge-gray', pending: 'badge-amber', published: 'badge-green', archived: 'badge-gray' };
             
             const html = result.data.items.map(event => {
-              const name = event.name.vi || event.name.en || 'Unknown';
+              const name = escapeHtml(event.name.vi || event.name.en || "Unknown");
               const icon = event.icon || typeIcons[event.type] || '📅';
               const location = event.location || 'Chưa xác định';
               const formatDate = (d) => { if (!d) return ''; return new Date(d).toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'}); };
@@ -2364,9 +2542,9 @@
           section.style.display = 'block';
           container.innerHTML = result.data.map(c => `
             <div style="padding:8px 0; border-bottom:1px solid var(--border); font-size:13px;">
-              <strong>${c.user_name || 'Ẩn danh'}</strong>
+              <strong>${escapeHtml(c.user_name || "Ẩn danh")}</strong>
               <span style="color:var(--muted); margin-left:8px;">${new Date(c.created_at).toLocaleDateString('vi-VN')}</span>
-              <p style="margin:4px 0 0;">${c.comment}</p>
+              <p style="margin:4px 0 0;">${escapeHtml(c.comment)}</p>
             </div>
           `).join('');
         } else {
@@ -3215,7 +3393,7 @@
           select.innerHTML = '<option value="">— Chọn điểm du lịch —</option>';
           
           result.data.items.forEach(d => {
-            const name = d.name.vi || d.name.en;
+            const name = escapeHtml(d.name.vi || d.name.en);
             const option = document.createElement('option');
             option.value = d.id;
             option.textContent = name;

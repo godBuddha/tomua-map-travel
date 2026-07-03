@@ -13,6 +13,7 @@ const i18nRoutes = require('./i18n.routes');
 const uploadRoutes = require('./upload.routes');
 const commentRoutes = require('./comments.routes');
 const settingsRoutes = require('./settings.routes');
+const mfaRoutes = require('./mfa.routes');
 
 router.use('/auth', authRoutes);
 router.use('/destinations', destinationRoutes);
@@ -22,6 +23,7 @@ router.use('/i18n', i18nRoutes);
 router.use('/upload', uploadRoutes);
 router.use('/comments', commentRoutes);
 router.use('/settings', settingsRoutes);
+router.use('/mfa', mfaRoutes);
 
 // Stats endpoint
 router.get('/stats', async (req, res) => {

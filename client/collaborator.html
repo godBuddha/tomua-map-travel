@@ -970,7 +970,7 @@
             tbody.innerHTML = result.data.items.map(d => {
               const lat = d.lat || 0;
               const lng = d.lng || 0;
-              const name = d.name.vi || d.name.en;
+              const name = escapeHtml(d.name.vi || d.name.en);
               const typeLabels = { 
                 waterfall: I18nNew.getCommon('type.waterfall', 'Thác nước'), 
                 cave: I18nNew.getCommon('type.cave', 'Hang động'), 

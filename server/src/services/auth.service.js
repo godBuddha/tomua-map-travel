@@ -15,9 +15,32 @@ const AuthService = {
       throw new Error('Account is inactive');
     }
 
+    // Check if account is locked
+    if (user.locked_until && new Date(user.locked_until) > new Date()) {
+      const lockMinutes = Math.ceil((new Date(user.locked_until) - new Date()) / 60000);
+      throw new Error(`Account is locked. Try again in ${lockMinutes} minutes.`);
+    }
+
     const isValidPassword = await User.comparePassword(password, user.password_hash);
     if (!isValidPassword) {
+      // Increment failed login attempts
+      await this.handleFailedLogin(user.id);
       throw new Error('Invalid credentials');
+    }
+
+    // Reset failed login attempts on successful password verification
+    await db('users').where('id', user.id).update({
+      failed_login_attempts: 0,
+      locked_until: null
+    });
+
+    // Check if MFA is enabled
+    if (user.mfa_enabled) {
+      return {
+        mfa_required: true,
+        user_id: user.id,
+        message: 'MFA verification required'
+      };
     }
 
     const tokens = this.generateTokens(user);
@@ -38,6 +61,21 @@ const AuthService = {
       },
       ...tokens
     };
+  },
+
+  // Handle failed login attempts
+  async handleFailedLogin(userId) {
+    const user = await User.findById(userId);
+    const attempts = (user.failed_login_attempts || 0) + 1;
+    
+    const updateData = { failed_login_attempts: attempts };
+    
+    // Lock account after 5 failed attempts for 15 minutes
+    if (attempts >= 5) {
+      updateData.locked_until = new Date(Date.now() + 15 * 60 * 1000);
+    }
+    
+    await db('users').where('id', userId).update(updateData);
   },
 
   async register(userData) {

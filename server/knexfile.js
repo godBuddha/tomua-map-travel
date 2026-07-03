@@ -6,9 +6,9 @@ module.exports = {
     connection: process.env.DATABASE_URL || {
       host: 'localhost',
       port: 5432,
-      user: 'tomua_admin',
-      password: 'secure_password_here',
-      database: 'tomua_tourism'
+      user: process.env.DB_USER || 'tomua_admin',
+      password: process.env.DB_PASSWORD || (() => { throw new Error('DB_PASSWORD must be set'); })(),
+      database: process.env.DB_NAME || 'tomua_tourism'
     },
     pool: {
       min: 2,

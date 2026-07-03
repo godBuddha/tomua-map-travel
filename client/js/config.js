@@ -1,3 +1,11 @@
+// Security: HTML escape function to prevent XSS
+function escapeHtml(text) {
+  if (text == null) return '';
+  const str = String(text);
+  const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;', '/': '&#x2F;' };
+  return str.replace(/[&<>"'/]/g, c => map[c]);
+}
+
 // Shared configuration for Tomua Map Travel
 const TomuaConfig = {
   // Destination type colors

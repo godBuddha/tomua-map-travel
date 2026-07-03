@@ -560,7 +560,7 @@
         const formatDate = (d) => { if (!d) return ''; return new Date(d).toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'}); };
         
         grid.innerHTML = filtered.map(event => {
-          const name = event.name[lang] || event.name.vi || event.name.en;
+          const name = escapeHtml(event.name[lang] || event.name.vi || event.name.en);
           const desc = event.description ? (event.description[lang] || event.description.vi || event.description.en || '') : '';
           const icon = event.icon || typeIcons[event.type] || '📅';
           
@@ -625,7 +625,7 @@
         }
         
         grid.innerHTML = filtered.map(route => {
-          const name = route.name[lang] || route.name.vi || route.name.en;
+          const name = escapeHtml(route.name[lang] || route.name.vi || route.name.en);
           const desc = route.description ? (route.description[lang] || route.description.vi || route.description.en || '') : '';
           const stops = route.stops || [];
           const stopsHtml = stops.map((s, i) => {

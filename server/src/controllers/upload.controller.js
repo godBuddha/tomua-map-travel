@@ -6,7 +6,8 @@ const { v4: uuidv4 } = require('uuid');
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || './uploads';
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024; // 5MB
-const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_CATEGORIES = ['destinations', 'routes', 'events', 'temp'];
 const OUTPUT_FORMAT = 'webp';
 const OUTPUT_QUALITY = 80;
 
@@ -43,7 +44,7 @@ const UploadController = {
         return badRequest(res, `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB.`);
       }
 
-      const category = req.body.category || 'destinations';
+      const category = ALLOWED_CATEGORIES.includes(req.body.category) ? req.body.category : 'destinations';
       const outputDir = path.join(UPLOAD_DIR, category);
       ensureDirectoryExists(outputDir);
 
@@ -89,7 +90,7 @@ const UploadController = {
         return badRequest(res, 'No files uploaded');
       }
 
-      const category = req.body.category || 'destinations';
+      const category = ALLOWED_CATEGORIES.includes(req.body.category) ? req.body.category : 'destinations';
       const outputDir = path.join(UPLOAD_DIR, category);
       ensureDirectoryExists(outputDir);
 

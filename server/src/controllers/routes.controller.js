@@ -103,7 +103,17 @@ const RouteController = {
       }
 
       // Handle stops update
-      const { stops, ...routeData } = req.body;
+      const { stops, ...routeDataRaw } = req.body;
+      
+      // Whitelist allowed fields to prevent mass assignment
+      const allowedFields = ['name', 'description', 'transport', 'duration', 'difficulty', 
+        'distance_km', 'estimated_time_min', 'elevation_gain_m', 'image_url', 'metadata'];
+      const routeData = {};
+      for (const field of allowedFields) {
+        if (routeDataRaw[field] !== undefined) {
+          routeData[field] = routeDataRaw[field];
+        }
+      }
       
       const updated = await Route.update(id, routeData);
 

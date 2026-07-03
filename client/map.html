@@ -472,7 +472,7 @@
         <div class="dest-item" data-id="${d.id}" onclick="focusDest('${d.id}')" style="animation-delay:${i * 40}ms">
           <div class="dest-thumb ${d.type}">${typeEmoji[d.type] || '📍'}</div>
           <div class="dest-info">
-            <h4>${d.name}</h4>
+            <h4>${escapeHtml(d.name)}</h4>
             <p>${d.desc.substring(0, 80)}...</p>
             <div class="dest-tags">
               <span class="dest-tag">${getTypeLabel(d.type)}</span>

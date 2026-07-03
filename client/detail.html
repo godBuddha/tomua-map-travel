@@ -320,7 +320,7 @@
           document.getElementById('heroSky').style.backgroundPosition = 'center';
           
           // Update gallery
-          const name = window.dest.name[lang] || window.dest.name.vi || window.dest.name.en;
+          const name = escapeHtml(window.dest.name[lang] || window.dest.name.vi || window.dest.name.en);
           document.getElementById('galleryMain').innerHTML = `<img src="${imageUrl}" alt="${name}" class="gallery-img">`;
         }
 
@@ -408,7 +408,7 @@
       }
       
       const lang = I18nNew.getLang() || 'vi';
-      const name = window.dest.name[lang] || window.dest.name.vi || window.dest.name.en || I18nNew.get('d'+window.dest.id+'.name');
+      const name = escapeHtml(window.dest.name[lang] || window.dest.name.vi || window.dest.name.en) || I18nNew.get('d'+window.dest.id+'.name');
       const desc = window.dest.description ? (window.dest.description[lang] || window.dest.description.vi || window.dest.description.en || I18nNew.get('d'+window.dest.id+'.desc')) : I18nNew.get('d'+window.dest.id+'.desc');
       const quoteStr = window.dest.quote ? (window.dest.quote[lang] || window.dest.quote.vi || window.dest.quote.en || I18nNew.get('d'+window.dest.id+'.quote')) : I18nNew.get('d'+window.dest.id+'.quote');
       

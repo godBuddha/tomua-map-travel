@@ -1,6 +1,9 @@
 const Destination = require('../models/destination.model');
 const Comment = require('../models/comment.model');
+const CacheService = require('../services/cache.service');
 const { success, created, noContent, badRequest, notFound, forbidden } = require('../utils/response');
+
+const CACHE_TTL = 300; // 5 minutes
 
 const DestinationController = {
   async index(req, res, next) {
@@ -20,19 +23,29 @@ const DestinationController = {
       if (!req.user || req.user.role === 'user') {
         filters.status = req.query.status || 'published';
       } else {
-        // Admin and Collaborator can see other statuses if they want
-        // But if they don't specify, we show them everything (undefined removes the where clause)
         filters.status = req.query.status || undefined;
       }
       
-      // If collaborator, we should ideally only show their drafts + all published, 
-      // but since findAll doesn't support complex OR queries for this yet, 
-      // letting them see all (undefined status) is the current fallback.
       if (req.user && req.user.role === 'collaborator') {
          filters.collaborator_id = req.user.id;
       }
 
+      // Check cache for public requests
+      const cacheKey = `destinations:${JSON.stringify(filters)}`;
+      if (!req.user) {
+        const cached = await CacheService.get(cacheKey);
+        if (cached) {
+          return success(res, cached);
+        }
+      }
+
       const result = await Destination.findAll(filters);
+      
+      // Cache public results
+      if (!req.user) {
+        await CacheService.set(cacheKey, result, CACHE_TTL);
+      }
+      
       return success(res, result);
     } catch (error) {
       next(error);
@@ -43,6 +56,13 @@ const DestinationController = {
     try {
       const { idOrSlug } = req.params;
       
+      // Check cache
+      const cacheKey = `destination:${idOrSlug}`;
+      const cached = await CacheService.get(cacheKey);
+      if (cached) {
+        return success(res, cached);
+      }
+
       let destination;
       if (idOrSlug.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
         destination = await Destination.findById(idOrSlug);
@@ -53,6 +73,9 @@ const DestinationController = {
       if (!destination) {
         return notFound(res, 'Destination not found');
       }
+
+      // Cache the result
+      await CacheService.set(cacheKey, destination, CACHE_TTL);
 
       return success(res, destination);
     } catch (error) {
@@ -118,6 +141,14 @@ const DestinationController = {
       }
 
       const updated = await Destination.update(id, data);
+      
+      // Invalidate cache
+      await CacheService.del(`destination:${id}`);
+      if (destination.slug) {
+        await CacheService.del(`destination:${destination.slug}`);
+      }
+      await CacheService.delPattern('destinations:*');
+      
       return success(res, updated);
     } catch (error) {
       next(error);
@@ -134,6 +165,14 @@ const DestinationController = {
       }
 
       await Destination.delete(id);
+      
+      // Invalidate cache
+      await CacheService.del(`destination:${id}`);
+      if (destination.slug) {
+        await CacheService.del(`destination:${destination.slug}`);
+      }
+      await CacheService.delPattern('destinations:*');
+      
       return noContent(res);
     } catch (error) {
       next(error);

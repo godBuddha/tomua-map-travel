@@ -11,9 +11,18 @@ const AuthController = {
       }
 
       const result = await AuthService.login(username, password);
+      
+      // If MFA is required, return special response
+      if (result.mfa_required) {
+        return success(res, result);
+      }
+      
       return success(res, result);
     } catch (error) {
       if (error.message === 'Invalid credentials' || error.message === 'Account is inactive') {
+        return unauthorized(res, error.message);
+      }
+      if (error.message.includes('Account is locked')) {
         return unauthorized(res, error.message);
       }
       next(error);
