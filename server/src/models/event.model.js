@@ -6,15 +6,36 @@ const TABLE = 'events';
 
 const Event = {
   async findById(id) {
-    return db(TABLE).where('id', id).first();
+    const event = await db(TABLE)
+      .select(
+        `${TABLE}.*`,
+        db.raw('ST_Y(location::geometry) as lat'),
+        db.raw('ST_X(location::geometry) as lng')
+      )
+      .where(`${TABLE}.id`, id)
+      .first();
+    return event;
   },
 
   async findBySlug(slug) {
-    return db(TABLE).where('slug', slug).first();
+    const event = await db(TABLE)
+      .select(
+        `${TABLE}.*`,
+        db.raw('ST_Y(location::geometry) as lat'),
+        db.raw('ST_X(location::geometry) as lng')
+      )
+      .where(`${TABLE}.slug`, slug)
+      .first();
+    return event;
   },
 
   async findAll(filters = {}) {
-    const query = db(TABLE);
+    const query = db(TABLE)
+      .select(
+        `${TABLE}.*`,
+        db.raw('ST_Y(location::geometry) as lat'),
+        db.raw('ST_X(location::geometry) as lng')
+      );
 
     if (filters.type) {
       query.where('type', filters.type);
@@ -151,6 +172,10 @@ const Event = {
       updateData.rejection_reason = null;
     } else if (status === 'draft') {
       updateData.rejection_reason = rejectionReason;
+    } else if (status === 'pending_edit') {
+      updateData.rejection_reason = null;
+    } else if (status === 'pending_delete') {
+      updateData.rejection_reason = null;
     }
 
     const [event] = await db(TABLE)

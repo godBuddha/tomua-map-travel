@@ -1,153 +1,169 @@
-// i18n Module - Load translations from API
-const I18n = {
-  cache: {},
-  currentLang: 'vi',
-  currentPage: null,
+// i18next initialization module
+// Replaces custom I18nNew with standard i18next library
+// Requires: i18next, i18next-http-backend, i18next-browser-languagedetector (loaded via CDN)
 
-  // Initialize i18n
-  init(page) {
-    this.currentPage = page;
-    this.currentLang = localStorage.getItem('tm_lang') || 'vi';
-    
-    // Listen for language changes
-    const langSelect = document.getElementById('langSelect');
+(function () {
+  'use strict';
+
+  var DEFAULT_LANG = 'vi';
+  var SUPPORTED_LANGS = ['vi', 'en', 'ko', 'ru', 'th', 'zh', 'id', 'ms', 'lo', 'es', 'fr', 'de'];
+  var COMMON_NS = ['common', 'navigation'];
+
+  // Custom response parser for our API format
+  // API returns: { success: true, data: { page, lang, translations: { key: value } } }
+  function parseResponse(data) {
+    if (data && data.success && data.data && data.data.translations) {
+      return data.data.translations;
+    }
+    return data;
+  }
+
+  // Custom backend using fetch directly with cache-busting
+  var customBackend = {
+    type: 'backend',
+    init: function () {},
+    read: function (language, namespace, callback) {
+      var url = '/api/i18n/' + namespace + '/' + language + '?t=' + Date.now();
+      fetch(url, { cache: 'no-store' })
+        .then(function (response) {
+          if (!response.ok) throw new Error('Failed to load');
+          return response.json();
+        })
+        .then(function (data) {
+          var translations = parseResponse(data);
+          callback(null, translations);
+        })
+        .catch(function (err) {
+          callback(err, null);
+        });
+    },
+    save: function () {}
+  };
+
+  // Initialize i18next
+  async function init(page) {
+    if (typeof TomuaConfig !== 'undefined' && TomuaConfig.initSettings) {
+      await TomuaConfig.initSettings();
+    }
+
+    var savedLang = localStorage.getItem('tm_lang') || DEFAULT_LANG;
+    var namespaces = COMMON_NS.concat([page]);
+
+    await i18next
+      .use(customBackend)
+      .use(i18nextBrowserLanguageDetector)
+      .init({
+        lng: savedLang,
+        fallbackLng: DEFAULT_LANG,
+        supportedLngs: SUPPORTED_LANGS,
+        ns: namespaces,
+        defaultNS: page,
+        fallbackNS: COMMON_NS,
+        interpolation: {
+          escapeValue: false,
+          prefix: '{{',
+          suffix: '}}'
+        },
+        detection: {
+          lookupLocalStorage: 'tm_lang',
+          lookupQuerystring: false,
+          lookupCookie: false,
+          lookupSessionStorage: false,
+          order: ['localStorage'],
+          caches: ['localStorage'],
+          fallbackLng: DEFAULT_LANG
+        },
+        returnNull: false,
+        returnEmptyString: false,
+        returnDetails: false,
+        saveMissing: false,
+        initImmediate: false
+      });
+
+    applyTranslations();
+
+    var langSelect = document.getElementById('langSelect');
     if (langSelect) {
-      langSelect.value = this.currentLang;
-      langSelect.addEventListener('change', async (e) => {
-        this.currentLang = e.target.value;
-        localStorage.setItem('tm_lang', this.currentLang);
-        await this.loadAndApply();
+      langSelect.value = savedLang;
+      langSelect.addEventListener('change', async function (e) {
+        var lang = e.target.value;
+        localStorage.setItem('tm_lang', lang);
+        await i18next.changeLanguage(lang);
+        applyTranslations();
         document.dispatchEvent(new CustomEvent('i18n-changed'));
       });
     }
-  },
+  }
 
-  // Load translations from API or cache
-  async load(page, lang) {
-    const cacheKey = `${page}_${lang}`;
-    
-    // Check memory cache
-    if (this.cache[cacheKey]) {
-      return this.cache[cacheKey];
-    }
-
-    // Check localStorage cache
-    const stored = localStorage.getItem(`i18n_${cacheKey}`);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        this.cache[cacheKey] = parsed;
-        return parsed;
-      } catch (e) {
-        localStorage.removeItem(`i18n_${cacheKey}`);
-      }
-    }
-
-    // Fetch from API
-    try {
-      const response = await fetch(`/api/i18n/${page}/${lang}`);
-      const data = await response.json();
-      if (data.success && data.data.translations) {
-        this.cache[cacheKey] = data.data.translations;
-        localStorage.setItem(`i18n_${cacheKey}`, JSON.stringify(data.data.translations));
-        return data.data.translations;
-      }
-    } catch (error) {
-      console.error('Error loading translations:', error);
-    }
-
-    return {};
-  },
-
-  // Load common translations + page-specific translations
-  async loadAndApply() {
-    if (!this.currentPage) return;
-
-    try {
-      // Load common translations (types, status, etc.)
-      const common = await this.load('common', this.currentLang);
-      
-      // Load navigation translations
-      const navigation = await this.load('navigation', this.currentLang);
-      
-      // Load page-specific translations
-      const page = await this.load(this.currentPage, this.currentLang);
-      
-      // Merge translations (page-specific takes priority)
-      const translations = { ...common, ...navigation, ...page };
-      
-      // Apply to DOM
-      this.apply(translations);
-      
-      return translations;
-    } catch (error) {
-      console.error('Error in loadAndApply:', error);
-      return {};
-    }
-  },
-
-  // Apply translations to DOM elements with data-i18n attribute
-  apply(translations) {
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.getAttribute('data-i18n');
-      if (translations[key]) {
-        el.innerHTML = translations[key];
-      }
+  // Apply translations to all data-i18n elements
+  function applyTranslations() {
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      var value = i18next.t(key);
+      if (value && value !== key) el.innerHTML = value;
     });
 
-    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-      const key = el.getAttribute('data-i18n-placeholder');
-      if (translations[key]) {
-        el.placeholder = translations[key];
-      }
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n-placeholder');
+      var value = i18next.t(key);
+      if (value && value !== key) el.placeholder = value;
     });
 
-    document.querySelectorAll('[data-i18n-value]').forEach(el => {
-      const key = el.getAttribute('data-i18n-value');
-      if (translations[key]) {
-        el.value = translations[key];
-      }
+    document.querySelectorAll('[data-i18n-value]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n-value');
+      var value = i18next.t(key);
+      if (value && value !== key) el.value = value;
     });
-  },
+  }
 
-  // Get a single translation
-  get(key, defaultValue = '') {
-    const cacheKey = `${this.currentPage}_${this.currentLang}`;
-    const translations = this.cache[cacheKey] || {};
-    return translations[key] || defaultValue;
-  },
+  // Get translation with fallback
+  function get(key, defaultValue) {
+    var value = i18next.t(key);
+    if (value && value !== key) return value;
+    return defaultValue || key;
+  }
 
-  // Get common translation
-  getCommon(key, defaultValue = '') {
-    const cacheKey = `common_${this.currentLang}`;
-    const translations = this.cache[cacheKey] || {};
-    return translations[key] || defaultValue;
-  },
-
-  // Clear cache (useful after admin updates translations)
-  clearCache() {
-    this.cache = {};
-    // Clear localStorage i18n entries
-    Object.keys(localStorage).forEach(key => {
-      if (key.startsWith('i18n_')) {
-        localStorage.removeItem(key);
-      }
-    });
-  },
+  // Get common translation (cross-page)
+  function getCommon(key, defaultValue) {
+    for (var i = 0; i < COMMON_NS.length; i++) {
+      var value = i18next.t(key, { ns: COMMON_NS[i] });
+      if (value && value !== key) return value;
+    }
+    var value = i18next.t(key);
+    if (value && value !== key) return value;
+    return defaultValue || key;
+  }
 
   // Get current language
-  getLang() {
-    return this.currentLang;
-  },
+  function getLang() {
+    return i18next.language || DEFAULT_LANG;
+  }
 
   // Set language
-  setLang(lang) {
-    this.currentLang = lang;
+  function setLang(lang) {
     localStorage.setItem('tm_lang', lang);
+    i18next.changeLanguage(lang).then(function () {
+      applyTranslations();
+      document.dispatchEvent(new CustomEvent('i18n-changed'));
+    });
   }
-};
 
-// Export for use in other scripts
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = I18n;
-}
+  // Clear cache
+  function clearCache() {
+    i18next.reloadResources();
+  }
+
+  // Expose as window.TmI18n
+  window.TmI18n = {
+    init: init,
+    get: get,
+    getCommon: getCommon,
+    getLang: getLang,
+    setLang: setLang,
+    clearCache: clearCache,
+    applyTranslations: applyTranslations
+  };
+
+  // Backward compatibility
+  window.I18nNew = window.TmI18n;
+})();

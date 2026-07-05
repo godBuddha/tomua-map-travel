@@ -8,23 +8,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="lib/leaflet.css" />
+  <link rel="stylesheet" href="css/design-system.css" />
   <style>
     /* === PAGE TRANSITION === */
     body { opacity: 0; transition: opacity 0.4s ease-in-out; }
     body.page-fade-in { opacity: 1; }
     body.page-fade-out { opacity: 0; }
 
-    :root {
-      --bg: #f6f5f0; --surface: #ffffff; --fg: #1a2e1a; --muted: #6b7b6b; --border: #e0ded8;
-      --accent: #2d6a4f; --accent-dark: #1b4332; --warm: #d97706; --waterfall: #0e7490;
-      --cave: #78716c; --spirit: #9f1239; --radius: 14px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
-      --shadow-lg: 0 4px 12px rgba(0,0,0,0.08), 0 16px 40px rgba(0,0,0,0.06);
-      --font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: var(--font); color: var(--fg); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
-    a { color: inherit; text-decoration: none; }
+    body { height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
 
     /* TOPBAR */
     .topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background: var(--accent-dark); color: #fff; z-index: 1000; flex-shrink: 0; }
@@ -51,16 +42,20 @@
     .search-box:focus { border-color: var(--accent); }
 
     .filters { display: flex; gap: 6px; padding: 12px 20px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
-    .filter-chip { padding: 6px 12px; border-radius: 100px; font-size: 12px; font-weight: 500; border: 1px solid var(--border); background: var(--surface); cursor: pointer; transition: all 150ms cubic-bezier(0.2, 0, 0, 1); display: flex; align-items: center; gap: 4px; }
-    .filter-chip:hover { border-color: var(--accent); }
+    .filter-chip { padding: 8px 16px; border-radius: 100px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--surface); cursor: pointer; transition: all 150ms cubic-bezier(0.2, 0, 0, 1); display: inline-flex; align-items: center; gap: 6px; font-family: var(--font); }
+    .filter-chip:hover { border-color: var(--accent); background: rgba(45,106,79,0.04); }
     .filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .filter-chip.active:hover { background: var(--accent-dark); }
     .filter-chip[data-type="waterfall"].active { background: var(--waterfall); border-color: var(--waterfall); }
     .filter-chip[data-type="cave"].active { background: var(--cave); border-color: var(--cave); }
-    .route-filter-chip { padding: 4px 8px; border-radius: 100px; font-size: 11px; font-weight: 500; border: 1px solid var(--border); background: var(--surface); cursor: pointer; transition: all 150ms cubic-bezier(0.2, 0, 0, 1); }
-    .route-filter-chip:hover { border-color: var(--warm); }
-    .route-filter-chip.active { background: var(--warm); color: #fff; border-color: var(--warm); }
     .filter-chip[data-type="historical"].active { background: #57534e; border-color: #57534e; }
     .filter-chip[data-type="spiritual"].active { background: var(--spirit); border-color: var(--spirit); }
+    .route-filter-chip { padding: 8px 16px; border-radius: 100px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--surface); cursor: pointer; transition: all 150ms cubic-bezier(0.2, 0, 0, 1); display: inline-flex; align-items: center; gap: 6px; font-family: var(--font); }
+    .route-filter-chip:hover { border-color: var(--warm); background: rgba(217,119,6,0.04); }
+    .route-filter-chip.active { background: var(--warm); color: #fff; border-color: var(--warm); }
+    .event-filter-chip { padding: 8px 16px; border-radius: 100px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--surface); cursor: pointer; transition: all 150ms cubic-bezier(0.2, 0, 0, 1); display: inline-flex; align-items: center; gap: 6px; font-family: var(--font); }
+    .event-filter-chip:hover { border-color: #d97706; background: rgba(217,119,6,0.04); }
+    .event-filter-chip.active { background: #d97706; color: #fff; border-color: #d97706; }
 
     .dest-list { flex: 1; overflow-y: auto; padding: 12px; }
     .dest-item { display: flex; gap: 14px; padding: 14px; border-radius: 12px; cursor: pointer; transition: all 0.2s; border: 1px solid transparent; margin-bottom: 4px; animation: fadeUp 200ms cubic-bezier(0.2, 0, 0, 1) both; }
@@ -180,16 +175,24 @@
         <button class="filter-chip" data-type="historical">🏛️ <span data-i18n="type.historical">Di tích</span></button>
         <button class="filter-chip" data-type="spiritual">⛩️ <span data-i18n="type.spiritual">Tâm linh</span></button>
       </div>
-      <div class="filters" style="margin-top: 8px;">
+      <div class="filters" id="routeFilters" style="margin-top: 8px; display: none;">
         <span style="font-size: 11px; color: var(--muted); font-weight: 600; margin-right: 8px;">LỘ TRÌNH:</span>
         <button class="route-filter-chip active" data-transport="all" onclick="filterRoutes('all', this)">Tất cả</button>
-        <button class="route-filter-chip" data-transport="walk" onclick="filterRoutes('walk', this)">🚶</button>
-        <button class="route-filter-chip" data-transport="bike" onclick="filterRoutes('bike', this)">🏍️</button>
-        <button class="route-filter-chip" data-transport="car" onclick="filterRoutes('car', this)">🚗</button>
+        <button class="route-filter-chip" data-transport="walk" onclick="filterRoutes('walk', this)">🚶 Đi bộ</button>
+        <button class="route-filter-chip" data-transport="bike" onclick="filterRoutes('bike', this)">🏍️ Xe máy</button>
+        <button class="route-filter-chip" data-transport="car" onclick="filterRoutes('car', this)">🚗 Ô tô</button>
+      </div>
+      <div class="filters" id="eventFilters" style="margin-top: 8px; display: none;">
+        <span style="font-size: 11px; color: var(--muted); font-weight: 600; margin-right: 8px;">SỰ KIỆN:</span>
+        <button class="event-filter-chip active" data-event-type="all" onclick="filterEvents('all', this)">Tất cả</button>
+        <button class="event-filter-chip" data-event-type="festival" onclick="filterEvents('festival', this)">🎪 Lễ hội</button>
+        <button class="event-filter-chip" data-event-type="season" onclick="filterEvents('season', this)">🌿 Theo mùa</button>
+        <button class="event-filter-chip" data-event-type="cultural" onclick="filterEvents('cultural', this)">🎭 Văn hóa</button>
+        <button class="event-filter-chip" data-event-type="food" onclick="filterEvents('food', this)">🍜 Ẩm thực</button>
       </div>
       <div class="dest-list" id="destList"></div>
       <div class="sidebar-footer">
-        <span id="totalCount">6 điểm du lịch</span>
+        <span id="totalCount">0 điểm du lịch</span>
         <span id="filteredCount">Hiển thị: 6</span>
       </div>
     </aside>
@@ -247,387 +250,62 @@
           </div>
         </div>
       </div>
+
+      <!-- ROUTE INFO PANEL -->
+      <div class="info-panel" id="routeInfoPanel">
+        <div class="info-panel-img" style="background: linear-gradient(135deg, #2d6a4f, #40916c);">
+          <button class="info-panel-close" onclick="closeRouteInfoPanel()">✕</button>
+          <h3 id="routeInfoPanelTitle"></h3>
+        </div>
+        <div class="info-panel-body">
+          <div class="info-label">Phương tiện</div>
+          <p id="routeInfoPanelTransport" style="margin-bottom:8px; font-size:13px; font-weight:600;"></p>
+          <div class="info-label">Mô tả</div>
+          <p id="routeInfoPanelDesc"></p>
+          <div class="info-label">Độ khó</div>
+          <p id="routeInfoPanelDifficulty" style="margin-bottom:8px; font-size:13px;"></p>
+          <div class="info-label">Thời gian</div>
+          <p id="routeInfoPanelDuration" style="margin-bottom:8px; font-size:13px;"></p>
+          <div class="info-label">Khoảng cách</div>
+          <p id="routeInfoPanelDistance" style="margin-bottom:16px; font-size:13px;"></p>
+          <div class="info-label">Điểm dừng</div>
+          <div id="routeInfoPanelStops" style="margin-bottom:16px;"></div>
+          <div class="info-actions">
+            <a id="routeInfoPanelDir" href="#" target="_blank" class="info-btn info-btn-primary">📍 Xem trên Google Maps</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- EVENT INFO PANEL -->
+      <div class="info-panel" id="eventInfoPanel">
+        <div class="info-panel-img" style="background: linear-gradient(135deg, #d97706, #f59e0b);">
+          <button class="info-panel-close" onclick="closeEventInfoPanel()">✕</button>
+          <h3 id="eventInfoPanelTitle"></h3>
+        </div>
+        <div class="info-panel-body">
+          <div class="info-label">Loại sự kiện</div>
+          <p id="eventInfoPanelType" style="margin-bottom:8px; font-size:13px; font-weight:600;"></p>
+          <div class="info-label">Mô tả</div>
+          <p id="eventInfoPanelDesc"></p>
+          <div class="info-label">Thời gian</div>
+          <p id="eventInfoPanelDate" style="margin-bottom:8px; font-size:13px;"></p>
+          <div class="info-label">Địa điểm</div>
+          <p id="eventInfoPanelLocation" style="margin-bottom:16px; font-size:13px;"></p>
+          <div class="info-actions">
+            <a id="eventInfoPanelDir" href="#" target="_blank" class="info-btn info-btn-primary">📍 Chỉ đường</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
   <script src="lib/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next/23.7.1/i18next.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next-http-backend/2.4.2/i18nextHttpBackend.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next-browser-languagedetector/8.2.1/i18nextBrowserLanguageDetector.min.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/config.js"></script>
-  <script src="js/i18n-new.js"></script>
-  <script>
-    // Initialize i18n
-    I18nNew.init('map').then(() => {
-      // Load destinations after translations are loaded
-      loadDestinations();
-    });
 
-    // Helper function to get type label from i18n
-    function getTypeLabel(type) {
-      return I18nNew.getCommon(`type.${type}`, type);
-    }
-
-    // Listen for language changes
-    document.addEventListener('i18n-changed', async () => {
-      // Reload destinations with new language
-      await loadDestinations();
-    });
-
-    // === DATA ===
-    let destinations = [];
-    const typeColors = TomuaConfig.typeColors;
-    const typeEmoji = TomuaConfig.typeEmoji;
-    const gradients = {
-      waterfall: 'linear-gradient(135deg, #0e7490, #155e75)',
-      cave: 'linear-gradient(135deg, #57534e, #44403c)',
-      historical: 'linear-gradient(135deg, #78716c, #57534e)',
-      spiritual: 'linear-gradient(135deg, #9f1239, #881337)'
-    };
-
-    // === MAP ===
-    const map = L.map('map', { zoomControl: false }).setView(TomuaConfig.mapCenter, 12);
-    L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-    const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(map);
-    const terrainLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '© OpenTopoMap' });
-
-    // Layer groups
-    const boundaryGroup = L.layerGroup().addTo(map);
-    const markerGroup = L.layerGroup().addTo(map);
-    const routeGroup = L.layerGroup().addTo(map);
-    const eventGroup = L.layerGroup().addTo(map);
-
-    // Load boundaries
-    const geoFiles = TomuaConfig.geoFiles;
-
-    geoFiles.forEach(({ file, name, color }) => {
-      fetch(file).then(r => r.json()).then(data => {
-        L.geoJSON(data, {
-          style: { color, weight: 2.5, opacity: 0.8, fillColor: color, fillOpacity: 0.06, dashArray: '6 4' }
-        }).bindTooltip(name, { permanent: false, direction: 'center', className: 'commune-label' }).addTo(boundaryGroup);
-      }).catch(err => console.error('Error loading boundary:', file, err));
-    });
-
-    fetch('Tô Múa (phường xã) - 34.geojson').then(r => r.json()).then(data => {
-      L.geoJSON(data, {
-        style: { color: '#1b4332', weight: 3.5, opacity: 1, fillColor: '#1b4332', fillOpacity: 0.03 }
-      }).addTo(boundaryGroup);
-    }).catch(err => console.error('Error loading merged boundary:', err));
-
-    // Load destinations from API
-    const markers = {};
-    async function loadDestinations() {
-      try {
-        // Clear existing markers
-        markerGroup.clearLayers();
-        Object.keys(markers).forEach(key => delete markers[key]);
-
-        const response = await fetch('/api/destinations?status=published');
-        const data = await response.json();
-        if (data.success) {
-          const lang = I18nNew.getLang() || 'vi';
-          destinations = data.data.items.map(d => {
-            const lat = d.lat || 0;
-            const lng = d.lng || 0;
-            return {
-              id: d.id,
-              slug: d.slug,
-              name: d.name[lang] || d.name.vi || d.name.en,
-              desc: d.description ? (d.description[lang] || d.description.vi || d.description.en || '') : '',
-              type: d.type,
-              region: d.region || 'Tô Múa',
-              lat,
-              lng
-            };
-          });
-
-          // Create markers
-          destinations.forEach(d => {
-            const icon = L.divIcon({
-              html: `<div style="background:${typeColors[d.type] || '#666'};width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;border:2.5px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);cursor:pointer;transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">${typeEmoji[d.type] || '📍'}</div>`,
-              className: '', iconSize: [36, 36], iconAnchor: [18, 18]
-            });
-            const marker = L.marker([d.lat, d.lng], { icon }).addTo(markerGroup);
-            marker.on('click', () => showInfoPanel(d));
-            markers[d.id] = marker;
-          });
-
-          renderList();
-        }
-      } catch (error) {
-        console.error('Error loading destinations:', error);
-      }
-    }
-
-    loadDestinations();
-
-    // Load routes from API
-    // Routes data and filter
-    let allRoutesData = [];
-    let currentRouteTransport = 'all';
-
-    function filterRoutes(transport, btn) {
-      currentRouteTransport = transport;
-      document.querySelectorAll('.route-filter-chip').forEach(c => c.classList.remove('active'));
-      btn.classList.add('active');
-      renderRoutesOnMap();
-    }
-
-    function renderRoutesOnMap() {
-      routeGroup.clearLayers();
-      const filtered = currentRouteTransport === 'all' ? allRoutesData : allRoutesData.filter(r => r.transport === currentRouteTransport);
-      
-      filtered.forEach(route => {
-        const transportColors = { walk: '#2d6a4f', bike: '#0e7490', car: '#d97706' };
-        const color = transportColors[route.transport] || '#2d6a4f';
-        
-        if (route.route_geometry) {
-          const coords = route.route_geometry.coordinates?.map(c => [c[1], c[0]]) || [];
-          if (coords.length > 0) {
-            L.polyline(coords, {
-              color: color,
-              weight: 4,
-              opacity: 0.7,
-              dashArray: '10 6'
-            }).bindPopup(`<b>${route.name?.vi || route.name?.en || 'Route'}</b><br>${route.transport || ''}`).addTo(routeGroup);
-          }
-        }
-        
-        if (route.stops && route.stops.length > 1) {
-          const stopCoords = [];
-          route.stops.forEach((stop, i) => {
-            if (stop.lat && stop.lng) {
-              stopCoords.push([stop.lat, stop.lng]);
-            }
-          });
-          if (stopCoords.length > 1) {
-            L.polyline(stopCoords, {
-              color: color,
-              weight: 3,
-              opacity: 0.6,
-              dashArray: '8 4'
-            }).addTo(routeGroup);
-          }
-        }
-      });
-    }
-
-    async function loadRoutes() {
-      try {
-        const response = await fetch('/api/routes?status=published');
-        const data = await response.json();
-        if (data.success) {
-          allRoutesData = data.data.items;
-          renderRoutesOnMap();
-        }
-      } catch (error) {
-        console.error('Error loading routes:', error);
-      }
-    }
-
-    // Load events from API
-    async function loadEvents() {
-      try {
-        eventGroup.clearLayers();
-        const response = await fetch('/api/events?status=published');
-        const data = await response.json();
-        if (data.success) {
-          const lang = I18nNew.getLang() || 'vi';
-          const typeIcons = { festival: '🎪', season: '🌿', experience: '⛰️', cultural: '🎭', sport: '🏃', food: '🍜', other: '📌' };
-          
-          data.data.items.forEach(event => {
-            if (event.lat && event.lng) {
-              const icon = L.divIcon({
-                html: `<div style="background:#d97706;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">${typeIcons[event.type] || '📅'}</div>`,
-                className: '', iconSize: [32, 32], iconAnchor: [16, 16]
-              });
-              
-              const name = event.name?.[lang] || event.name?.vi || event.name?.en || 'Event';
-              L.marker([event.lat, event.lng], { icon })
-                .bindPopup(`<b>${name}</b><br>${event.type || ''}`)
-                .addTo(eventGroup);
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error loading events:', error);
-      }
-    }
-
-    // Load routes and events
-    loadRoutes();
-    loadEvents();
-
-    // === SIDEBAR ===
-    let activeFilters = new Set(['all']);
-    let searchQuery = '';
-
-    function renderList() {
-      const list = document.getElementById('destList');
-      const filtered = destinations.filter(d => {
-        const matchType = activeFilters.has('all') || activeFilters.has(d.type);
-        const matchSearch = !searchQuery || d.name.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchType && matchSearch;
-      });
-
-      list.innerHTML = filtered.map((d, i) => `
-        <div class="dest-item" data-id="${d.id}" onclick="focusDest('${d.id}')" style="animation-delay:${i * 40}ms">
-          <div class="dest-thumb ${d.type}">${typeEmoji[d.type] || '📍'}</div>
-          <div class="dest-info">
-            <h4>${escapeHtml(d.name)}</h4>
-            <p>${d.desc.substring(0, 80)}...</p>
-            <div class="dest-tags">
-              <span class="dest-tag">${getTypeLabel(d.type)}</span>
-              <span class="dest-tag">${d.region}</span>
-            </div>
-          </div>
-        </div>
-      `).join('');
-
-      document.getElementById('filteredCount').textContent = `${I18nNew.get('map.showing', 'Hiển thị')}: ${filtered.length}`;
-
-      // Toggle marker visibility
-      destinations.forEach(d => {
-        const show = filtered.includes(d);
-        if (markers[d.id]) {
-          if (show && !markerGroup.hasLayer(markers[d.id])) markerGroup.addLayer(markers[d.id]);
-          if (!show && markerGroup.hasLayer(markers[d.id])) markerGroup.removeLayer(markers[d.id]);
-        }
-      });
-    }
-
-    function focusDest(id) {
-      const d = destinations.find(x => x.id === id);
-      if (!d) return;
-      map.flyTo([d.lat, d.lng], 15, { duration: 0.8 });
-      showInfoPanel(d);
-      document.querySelectorAll('.dest-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
-    }
-
-    // Filters
-    document.querySelectorAll('.filter-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const type = chip.dataset.type;
-        if (type === 'all') {
-          activeFilters.clear();
-          activeFilters.add('all');
-          document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-          chip.classList.add('active');
-        } else {
-          activeFilters.delete('all');
-          document.querySelector('.filter-chip[data-type="all"]').classList.remove('active');
-          chip.classList.toggle('active');
-          if (chip.classList.contains('active')) activeFilters.add(type);
-          else activeFilters.delete(type);
-          if (activeFilters.size === 0) { activeFilters.add('all'); document.querySelector('.filter-chip[data-type="all"]').classList.add('active'); }
-        }
-        renderList();
-      });
-    });
-
-    // Search
-    document.getElementById('searchBox').addEventListener('input', (e) => {
-      searchQuery = e.target.value;
-      renderList();
-    });
-
-    // === INFO PANEL ===
-    function showInfoPanel(d) {
-      console.log('showInfoPanel called with:', d);
-      console.log('slug:', d.slug, 'id:', d.id, 'name:', d.name);
-      const panel = document.getElementById('infoPanel');
-      document.getElementById('infoPanelTitle').textContent = d.name;
-      document.getElementById('infoPanelImg').style.background = gradients[d.type];
-      document.getElementById('infoPanelType').textContent = `${typeEmoji[d.type]} ${getTypeLabel(d.type)}`;
-      document.getElementById('infoPanelDesc').textContent = d.desc;
-      document.getElementById('infoPanelCoords').textContent = `${d.lat.toFixed(6)}°N, ${d.lng.toFixed(6)}°E`;
-      document.getElementById('infoPanelRegion').textContent = `${d.region} (${I18nNew.get('map.before_merge', 'trước sáp nhập')})`;
-      document.getElementById('infoPanelDir').href = `https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}`;
-      document.getElementById('infoPanelDetail').href = `detail.html?slug=${d.slug}`;
-      panel.classList.add('visible');
-      
-      // Load nearby destinations
-      loadNearbyDestinations(d.lat, d.lng, d.id);
-    }
-
-    function closeInfoPanel() {
-      document.getElementById('infoPanel').classList.remove('visible');
-    }
-
-    // Load nearby destinations
-    async function loadNearbyDestinations(lat, lng, currentId) {
-      const section = document.getElementById('nearbySection');
-      const list = document.getElementById('nearbyList');
-      
-      try {
-        const response = await fetch(`/api/destinations/nearby?lat=${lat}&lng=${lng}&radius=10000`);
-        const data = await response.json();
-        
-        if (data.success && data.data.length > 0) {
-          const lang = I18nNew.getLang() || 'vi';
-          const nearby = data.data.filter(d => d.id !== currentId).slice(0, 5);
-          
-          if (nearby.length > 0) {
-            section.style.display = 'block';
-            list.innerHTML = nearby.map(d => {
-              const name = d.name?.[lang] || d.name?.vi || d.name?.en || 'Unknown';
-              const dist = d.distance ? (d.distance < 1000 ? `${Math.round(d.distance)}m` : `${(d.distance/1000).toFixed(1)}km`) : '';
-              
-              return `<div style="display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid var(--border); cursor:pointer;" onclick="focusDest('${d.id}')">
-                <span style="font-size:16px;">${typeEmoji[d.type] || '📍'}</span>
-                <div style="flex:1; min-width:0;">
-                  <div style="font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${name}</div>
-                  <div style="font-size:11px; color:var(--muted);">${dist}</div>
-                </div>
-              </div>`;
-            }).join('');
-          } else {
-            section.style.display = 'none';
-          }
-        } else {
-          section.style.display = 'none';
-        }
-      } catch (error) {
-        console.error('Error loading nearby:', error);
-        section.style.display = 'none';
-      }
-    }
-
-    // === LAYERS ===
-    function toggleLayer(btn, layer) {
-      btn.classList.toggle('active');
-      const on = btn.classList.contains('active');
-      if (layer === 'boundaries') {
-        if (on) boundaryGroup.addTo(map); else map.removeLayer(boundaryGroup);
-      } else if (layer === 'markers') {
-        if (on) markerGroup.addTo(map); else map.removeLayer(markerGroup);
-      } else if (layer === 'routes') {
-        if (on) routeGroup.addTo(map); else map.removeLayer(routeGroup);
-      } else if (layer === 'events') {
-        if (on) eventGroup.addTo(map); else map.removeLayer(eventGroup);
-      } else if (layer === 'terrain') {
-        if (on) { terrainLayer.addTo(map); map.removeLayer(osmLayer); }
-        else { osmLayer.addTo(map); map.removeLayer(terrainLayer); }
-      }
-    }
-
-    // === GPS ===
-    document.getElementById('gpsBtn').addEventListener('click', () => {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(pos => {
-          const { latitude: lat, longitude: lng } = pos.coords;
-          map.flyTo([lat, lng], 14);
-          L.circleMarker([lat, lng], { radius: 8, color: '#2563eb', fillColor: '#3b82f6', fillOpacity: 0.5 }).addTo(map).bindPopup('Vị trí của bạn').openPopup();
-        }, () => { alert('Không thể xác định vị trí.'); });
-      }
-    });
-
-    // === I18N ===
-    // Remove hardcoded I18N object - now using i18n.js module
-
-    // Language change is handled by i18n.js module automatically
-
-    // Init
-    renderList();
-    setTimeout(() => map.invalidateSize(), 100);
-  </script>
+  <script type="module" src="./src/pages/map.js"></script>
 </body>
 </html>

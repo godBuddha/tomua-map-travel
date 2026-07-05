@@ -127,7 +127,7 @@ const DestinationController = {
         return notFound(res, 'Destination not found');
       }
 
-      // Collaborators can only update their own drafts
+      // Collaborators can only update their own destinations
       if (req.user.role === 'collaborator' && destination.created_by !== req.user.id) {
         return forbidden(res, 'You can only update your own destinations');
       }
@@ -138,6 +138,23 @@ const DestinationController = {
         if (req.body[field] !== undefined) {
           data[field] = req.body[field];
         }
+      }
+
+      // Collaborator edits require admin review
+      if (req.user.role === 'collaborator') {
+        data.status = 'pending_edit';
+        // Store original data for rollback on rejection
+        const originalData = {};
+        for (const field of allowedFields) {
+          if (destination[field] !== undefined) {
+            originalData[field] = destination[field];
+          }
+        }
+        data.metadata = {
+          ...(destination.metadata || {}),
+          original_before_edit: originalData,
+          previous_status: destination.status
+        };
       }
 
       const updated = await Destination.update(id, data);
@@ -212,10 +229,31 @@ const DestinationController = {
         return notFound(res, 'Destination not found');
       }
 
-      if (destination.status !== 'pending') {
+      if (!['pending', 'pending_edit', 'pending_delete'].includes(destination.status)) {
         return badRequest(res, 'Only pending destinations can be approved');
       }
 
+      // If approving a deletion request, actually delete the destination
+      if (destination.status === 'pending_delete') {
+        await Destination.delete(id);
+        await CacheService.del(`destination:${id}`);
+        if (destination.slug) {
+          await CacheService.del(`destination:${destination.slug}`);
+        }
+        await CacheService.delPattern('destinations:*');
+        
+        await Comment.create({
+          entity_type: 'destination',
+          entity_id: id,
+          user_id: req.user.id,
+          comment: req.body.comment || 'Deletion approved',
+          action: 'approve'
+        });
+        
+        return success(res, { message: 'Destination deleted' });
+      }
+
+      // Approve new or edited destination -> published
       const updated = await Destination.updateStatus(id, 'published', req.user.id);
 
       // Add approval comment
@@ -226,6 +264,13 @@ const DestinationController = {
         comment: req.body.comment || 'Approved',
         action: 'approve'
       });
+
+      // Invalidate cache
+      await CacheService.del(`destination:${id}`);
+      if (destination.slug) {
+        await CacheService.del(`destination:${destination.slug}`);
+      }
+      await CacheService.delPattern('destinations:*');
 
       return success(res, updated);
     } catch (error) {
@@ -248,10 +293,75 @@ const DestinationController = {
         return notFound(res, 'Destination not found');
       }
 
-      if (destination.status !== 'pending') {
+      if (!['pending', 'pending_edit', 'pending_delete'].includes(destination.status)) {
         return badRequest(res, 'Only pending destinations can be rejected');
       }
 
+      // If rejecting an edit, rollback to original data
+      if (destination.status === 'pending_edit') {
+        const metadata = destination.metadata || {};
+        const originalData = metadata.original_before_edit || {};
+        const previousStatus = metadata.previous_status || 'draft';
+
+        // Restore original data fields with rejection info
+        const rollbackData = { ...originalData };
+        rollbackData.status = previousStatus;
+        rollbackData.rejection_reason = reason;
+        rollbackData.metadata = null;
+        
+        await Destination.update(id, rollbackData);
+
+        await Comment.create({
+          entity_type: 'destination',
+          entity_id: id,
+          user_id: req.user.id,
+          comment: reason,
+          action: 'reject'
+        });
+
+        // Invalidate cache
+        await CacheService.del(`destination:${id}`);
+        if (destination.slug) {
+          await CacheService.del(`destination:${destination.slug}`);
+        }
+        await CacheService.delPattern('destinations:*');
+
+        const updated = await Destination.findById(id);
+        return success(res, updated);
+      }
+
+      // If rejecting a deletion request, restore previous status
+      if (destination.status === 'pending_delete') {
+        const metadata = destination.metadata || {};
+        const previousStatus = metadata.previous_status || 'draft';
+
+        // Use update directly to preserve rejection_reason regardless of target status
+        await Destination.update(id, { 
+          status: previousStatus, 
+          rejection_reason: reason,
+          metadata: null
+        });
+
+        await Comment.create({
+          entity_type: 'destination',
+          entity_id: id,
+          user_id: req.user.id,
+          comment: reason,
+          action: 'reject'
+        });
+
+        // Invalidate cache
+        await CacheService.del(`destination:${id}`);
+        if (destination.slug) {
+          await CacheService.del(`destination:${destination.slug}`);
+        }
+        await CacheService.delPattern('destinations:*');
+
+        const updated = await Destination.findById(id);
+        return success(res, updated);
+      }
+
+      // Standard rejection (pending -> draft)
       const updated = await Destination.updateStatus(id, 'draft', null, reason);
 
       // Add rejection comment
@@ -263,6 +373,59 @@ const DestinationController = {
         action: 'reject'
       });
 
+      return success(res, updated);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async requestDelete(req, res, next) {
+    try {
+      const { id } = req.params;
+      const destination = await Destination.findById(id);
+
+      if (!destination) {
+        return notFound(res, 'Destination not found');
+      }
+
+      // Collaborators can only request deletion of their own destinations
+      if (req.user.role === 'collaborator' && destination.created_by !== req.user.id) {
+        return forbidden(res, 'You can only request deletion of your own destinations');
+      }
+
+      // Cannot request deletion if already pending delete
+      if (destination.status === 'pending_delete') {
+        return badRequest(res, 'Deletion already requested');
+      }
+
+      // Store previous status in metadata for rollback if rejected
+      const metadata = {
+        ...(destination.metadata || {}),
+        previous_status: destination.status
+      };
+
+      await Destination.update(id, { 
+        status: 'pending_delete',
+        metadata
+      });
+
+      // Add comment
+      await Comment.create({
+        entity_type: 'destination',
+        entity_id: id,
+        user_id: req.user.id,
+        comment: 'Deletion requested',
+        action: 'request_changes'
+      });
+
+      // Invalidate cache
+      await CacheService.del(`destination:${id}`);
+      if (destination.slug) {
+        await CacheService.del(`destination:${destination.slug}`);
+      }
+      await CacheService.delPattern('destinations:*');
+
+      const updated = await Destination.findById(id);
       return success(res, updated);
     } catch (error) {
       next(error);

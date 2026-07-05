@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chi tiết điểm đến — Tô Múa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet">
+  <script src="js/config.js"></script>
+  <script src="js/i18n-new.js"></script>
+  <style>
+    /* === PAGE TRANSITION === */
+    body { opacity: 0; transition: opacity 0.4s ease-in-out; }
+    body.page-fade-in { opacity: 1; }
+    body.page-fade-out { opacity: 0; }
+
+    :root {
+      --bg: #f6f5f0; --surface: #ffffff; --fg: #1a2e1a; --muted: #6b7b6b; --border: #e0ded8;
+      --accent: #2d6a4f; --accent-dark: #1b4332; --warm: #d97706;
+      --radius: 14px; --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+      --shadow-lg: 0 4px 12px rgba(0,0,0,0.08), 0 16px 40px rgba(0,0,0,0.06);
+      --font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); color: var(--fg); background: var(--bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; text-decoration: none; }
+
+    .container { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAV */
+    .navbar { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; background: var(--accent-dark); color: #fff; position: sticky; top: 0; z-index: 100; }
+    .nav-left { display: flex; align-items: center; gap: 14px; }
+    .nav-back { font-size: 13px; color: rgba(255,255,255,0.6); display: flex; align-items: center; gap: 6px; transition: color 0.2s; letter-spacing: 0.02em; }
+    .nav-back:hover { color: #fff; }
+    .nav-logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; color: #fff; }
+    .nav-logo img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; }
+    .nav-right { display: flex; gap: 12px; align-items: center; }
+    .lang-select { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.18); color: #fff; padding: 5px 10px; border-radius: 8px; font-family: var(--font); font-size: 12px; cursor: pointer; }
+
+    /* HERO — layered landscape */
+    .detail-hero { position: relative; min-height: 520px; display: flex; align-items: flex-end; overflow: hidden; }
+    .hero-sky { position: absolute; inset: 0; background: linear-gradient(170deg, #1b4332 0%, #2d6a4f 35%, #52b788 65%, #95d5b2 100%); }
+    .hero-mountains { position: absolute; bottom: 0; left: 0; right: 0; height: 60%; }
+    .hero-mountains::before { content: ''; position: absolute; bottom: 0; left: -5%; right: -5%; height: 100%; background: linear-gradient(160deg, transparent 30%, rgba(27,67,50,0.4) 50%, transparent 70%); clip-path: polygon(0% 100%, 0% 60%, 8% 45%, 18% 55%, 28% 30%, 38% 50%, 48% 20%, 58% 40%, 68% 15%, 78% 35%, 88% 25%, 100% 45%, 100% 100%); }
+    .hero-mountains::after { content: ''; position: absolute; bottom: 0; left: -5%; right: -5%; height: 80%; background: linear-gradient(175deg, transparent 25%, rgba(27,67,50,0.25) 45%, transparent 65%); clip-path: polygon(0% 100%, 0% 70%, 12% 50%, 22% 65%, 35% 35%, 45% 55%, 55% 25%, 65% 45%, 75% 20%, 85% 40%, 95% 30%, 100% 50%, 100% 100%); }
+    .hero-fog { position: absolute; bottom: 0; left: 0; right: 0; height: 180px; background: linear-gradient(to top, var(--bg), rgba(246,245,240,0.6) 40%, transparent); z-index: 3; }
+    .hero-content { position: relative; z-index: 4; padding: 0 40px 60px; width: 100%; max-width: 1040px; margin: 0 auto; }
+    .hero-kicker { font-size: 11px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 14px; }
+    .hero-content h1 { font-family: var(--font-display); font-size: clamp(36px, 6vw, 56px); font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: -0.01em; margin-bottom: 16px; text-shadow: 0 2px 20px rgba(0,0,0,0.2); }
+    .hero-meta { display: flex; gap: 24px; flex-wrap: wrap; }
+    .hero-meta-item { display: flex; align-items: center; gap: 6px; font-size: 13px; color: rgba(255,255,255,0.75); }
+    .hero-meta-item svg { width: 14px; height: 14px; opacity: 0.7; }
+
+    /* INFOGRAPHIC STATS STRIP */
+    .stats-strip { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0; }
+    .stats-inner { display: flex; max-width: 1040px; margin: 0 auto; }
+    .stat-cell { flex: 1; padding: 20px 24px; text-align: center; border-right: 1px solid var(--border); }
+    .stat-cell:last-child { border-right: none; }
+    .stat-value { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--accent-dark); line-height: 1.2; }
+    .stat-label { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-top: 4px; }
+
+    /* CONTENT */
+    .detail-body { padding: 56px 0 80px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 340px; gap: 48px; }
+
+    /* MAIN COLUMN */
+    .detail-main {}
+    .detail-main h2 { font-family: var(--font-display); font-size: 24px; font-weight: 700; margin-bottom: 18px; letter-spacing: -0.01em; color: var(--fg); }
+    .detail-main p { font-size: 15px; line-height: 1.85; margin-bottom: 28px; color: #2a3a2a; }
+
+    .pull-quote { border-left: 3px solid var(--accent); padding: 20px 0 20px 24px; margin: 32px 0; font-family: var(--font-display); font-size: 20px; font-style: italic; line-height: 1.6; color: var(--accent-dark); }
+
+    /* INFO TABLE */
+    .info-table { width: 100%; border-collapse: collapse; margin-bottom: 36px; }
+    .info-table tr { border-bottom: 1px solid var(--border); }
+    .info-table tr:last-child { border-bottom: none; }
+    .info-table td { padding: 14px 0; font-size: 14px; vertical-align: top; }
+    .info-table .info-label { width: 160px; color: var(--muted); font-weight: 500; letter-spacing: 0.02em; }
+    .info-table .info-value { font-weight: 500; color: var(--fg); }
+
+    /* GALLERY — editorial grid */
+    .gallery { display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 180px 180px; gap: 8px; margin-bottom: 12px; }
+    .gallery-item { border-radius: 8px; overflow: hidden; position: relative; }
+    .gallery-item:first-child { grid-row: 1 / 3; }
+    .gallery-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .gallery-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 13px; color: rgba(255,255,255,0.6); font-weight: 500; letter-spacing: 0.04em; }
+    .gallery-caption { font-size: 11px; color: var(--muted); text-align: right; margin-bottom: 36px; font-style: italic; }
+
+    /* VISITOR NOTES */
+    .visitor-notes { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 28px; margin-top: 8px; }
+    .visitor-notes h2 { margin-bottom: 14px; }
+    .visitor-notes ul { list-style: none; padding: 0; }
+    .visitor-notes li { font-size: 14px; line-height: 1.7; padding: 8px 0; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 10px; }
+    .visitor-notes li:last-child { border-bottom: none; }
+    .visitor-notes .note-icon { flex-shrink: 0; width: 20px; text-align: center; font-size: 14px; margin-top: 2px; }
+
+    /* SIDEBAR */
+    .detail-sidebar { position: sticky; top: 72px; }
+    .sidebar-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); padding: 24px; margin-bottom: 16px; box-shadow: var(--shadow); }
+    .sidebar-card h3 { font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+    .detail-map { height: 180px; border-radius: 8px; overflow: hidden; margin-bottom: 14px; border: 1px solid var(--border); }
+    .coords { font-family: ui-monospace, 'JetBrains Mono', monospace; font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 14px; letter-spacing: 0.02em; }
+    .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; border-radius: 10px; font-family: var(--font); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; text-align: center; margin-bottom: 8px; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-dark); }
+    .btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
+    .btn-outline:hover { background: var(--bg); }
+
+    .nearby-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: all 0.2s; }
+    .nearby-item:last-child { border-bottom: none; }
+    .nearby-item:hover { opacity: 0.65; }
+    .nearby-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 7px; }
+    .nearby-info h4 { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .nearby-info p { font-size: 11px; color: var(--muted); letter-spacing: 0.02em; }
+
+    /* FOOTER */
+    footer { background: var(--accent-dark); color: rgba(255,255,255,0.5); padding: 28px 0; text-align: center; font-size: 12px; letter-spacing: 0.03em; }
+
+    @media (max-width: 768px) {
+      .detail-grid { grid-template-columns: 1fr; gap: 32px; }
+      .detail-sidebar { position: static; }
+      .detail-hero { min-height: 380px; }
+      .hero-content { padding: 0 24px 40px; }
+      .gallery { grid-template-columns: 1fr 1fr; grid-template-rows: 200px 140px; }
+      .gallery-item:first-child { grid-row: auto; }
+      .stat-cell { padding: 14px 12px; }
+      .stat-value { font-size: 18px; }
+    }
+
+    @media (max-width: 480px) {
+      .gallery { grid-template-columns: 1fr; grid-template-rows: auto; }
+      .gallery-item { height: 160px; }
+      .stats-inner { flex-wrap: wrap; }
+      .stat-cell { flex: 1 1 50%; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+  <link rel="stylesheet" crossorigin href="/assets/leaflet-CHtNrtow.css">
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <a href="map.html" class="nav-back">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><polyline points="12 19 5 12 12 5"/></svg>
+        <span data-i18n="nav.map">Bản đồ</span>
+      </a>
+      <a href="index.html" class="nav-logo">
+        <img src="/assets/mqr19fer-logo-to_-mu_a-CGn1zHaQ.jpg" alt="Logo xã Tô Múa" />
+        <span>Tô Múa</span>
+      </a>
+    </div>
+    <div class="nav-right">
+      <select class="lang-select" id="langSelect">
+        <option value="vi">🇻🇳 VI</option>
+        <option value="en">🇬🇧 EN</option>
+        <option value="ko">🇰🇷 KO</option>
+        <option value="ru">🇷🇺 RU</option>
+        <option value="th">🇹🇭 TH</option>
+        <option value="zh">🇨🇳 ZH</option>
+        <option value="id">🇮🇩 ID</option>
+        <option value="ms">🇲🇾 MS</option>
+        <option value="lo">🇱🇦 LO</option>
+        <option value="es">🇪🇸 ES</option>
+        <option value="fr">🇫🇷 FR</option>
+        <option value="de">🇩🇪 DE</option>
+      </select>
+    </div>
+  </nav>
+
+  <!-- HERO — layered landscape -->
+  <section class="detail-hero" id="detailHero">
+    <div class="hero-sky" id="heroSky"></div>
+    <div class="hero-mountains"></div>
+    <div class="hero-fog"></div>
+    <div class="hero-content">
+      <div class="hero-kicker" id="heroKicker">Đang tải...</div>
+      <h1 id="detailName">Đang tải...</h1>
+      <div class="hero-meta">
+        <span class="hero-meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span id="detailRegion">Đang tải...</span>
+        </span>
+        <span class="hero-meta-item">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          <span id="detailCoords">Đang tải...</span>
+        </span>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS STRIP -->
+  <div class="stats-strip">
+    <div class="stats-inner" id="statsStrip">
+      <div class="stat-cell"><div class="stat-value">Đang tải...</div><div class="stat-label">-</div></div>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="container">
+    <div class="detail-body">
+      <div class="detail-grid">
+
+        <!-- MAIN -->
+        <div class="detail-main">
+          <h2 id="headingIntro">Giới thiệu</h2>
+          <p id="detailDesc">Đang tải...</p>
+
+          <div class="pull-quote" id="pullQuote">"Tương truyền rằng xưa kia có một nàng tiên giáng trần, tắm mát tại dòng suối này và để lại vẻ đẹp thiên nhiên tuyệt mỹ cho vùng đất này."</div>
+
+          <p id="detailDescMore" style="display:none;"></p>
+
+          <h2 id="headingFeatures">Đặc điểm nổi bật</h2>
+          <table class="info-table" id="infoTable">
+            <tr><td class="info-label">Đang tải...</td><td class="info-value">-</td></tr>
+          </table>
+
+          <h2 id="headingGallery">Thư viện ảnh</h2>
+          <div class="gallery">
+            <div class="gallery-item" id="galleryMain">
+              <div class="gallery-placeholder" style="background: linear-gradient(135deg, #0e7490, #155e75);">Ảnh chính — sẽ cập nhật</div>
+            </div>
+            <div class="gallery-item">
+              <div class="gallery-placeholder" style="background: linear-gradient(135deg, #164e63, #0e7490);">Ảnh 2</div>
+            </div>
+            <div class="gallery-item">
+              <div class="gallery-placeholder" style="background: linear-gradient(135deg, #155e75, #083344);">Ảnh 3</div>
+            </div>
+          </div>
+          <p class="gallery-caption"><span data-i18n="gallery.caption">Ảnh minh hoạ — sẽ được cập nhật bởi cộng tác viên</span></p>
+
+          <div class="visitor-notes" id="visitorNotesBlock" style="display: none;">
+            <h2 data-i18n="notes.title">Lưu ý cho du khách</h2>
+            <ul id="visitorNotesList">
+              <!-- Dynamically populated from API -->
+            </ul>
+          </div>
+
+          <!-- COMMENTS SECTION -->
+          <div class="visitor-notes" id="commentsBlock" style="margin-top: 24px;">
+            <h2>Bình luận & Đánh giá</h2>
+            <div id="commentsList">
+              <!-- Loaded dynamically -->
+            </div>
+            <div id="commentForm" style="margin-top: 16px; display: none;">
+              <textarea id="commentInput" placeholder="Viết bình luận..." style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-family: var(--font); min-height: 80px; resize: vertical;"></textarea>
+              <button class="btn btn-primary" onclick="addComment()" style="margin-top: 8px;">Gửi bình luận</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="detail-sidebar">
+          <div class="sidebar-card">
+            <h3 data-i18n="sidebar.map">Vị trí trên bản đồ</h3>
+            <div class="detail-map" id="detailMap"></div>
+            <div class="coords" id="detailCoordsText">20.844008°N, 104.824985°E</div>
+            <a id="dirLink" href="https://www.google.com/maps/dir/?api=1&destination=20.844008,104.824985" target="_blank" class="btn btn-primary">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+              <span data-i18n="sidebar.directions">Chỉ đường (Google Maps)</span>
+            </a>
+            <button class="btn btn-outline" onclick="copyCoords()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              <span data-i18n="sidebar.copy">Sao chép tọa độ</span>
+            </button>
+          </div>
+
+          <div class="sidebar-card">
+            <h3 data-i18n="sidebar.nearby">Điểm đến gần đây</h3>
+            <div id="nearbyList"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container" data-i18n="footer">© 2026 Xã Tô Múa — Tỉnh Sơn La</div>
+  </footer>
+
+  <script src="lib/leaflet.js"></script>
+  <script>
+    const typeLabels = { waterfall: 'Thác nước', cave: 'Hang động', historical: 'Di tích lịch sử', spiritual: 'Tâm linh' };
+    const typeKickers = { waterfall: 'Thác nước · Khu vực', cave: 'Hang động · Khu vực', historical: 'Di tích lịch sử · Khu vực', spiritual: 'Tâm linh · Khu vực' };
+    const typeColors = TomuaConfig.typeColors;
+
+    let detailMap = null;
+
+    // Load destination from API
+    async function loadDestination() {
+      const params = new URLSearchParams(window.location.search);
+      const slug = params.get('slug') || 'hang-dong-son';
+      const lang = localStorage.getItem('tm_lang') || 'vi';
+
+      try {
+        const response = await fetch(`/api/destinations/${slug}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+          console.error('Destination not found');
+          return;
+        }
+
+        window.dest = data.data;
+        const lat = window.dest.lat || 0;
+        const lng = window.dest.lng || 0;
+        
+        const color = window.dest.color || typeColors[window.dest.type] || '#2d6a4f';
+        const gradient = window.dest.gradient || `linear-gradient(170deg, #1b4332, ${color} 50%, #95d5b2)`;
+        const imageUrl = window.dest.image_url || null;
+
+        // Display image if available
+        document.getElementById('heroSky').style.background = gradient;
+        if (imageUrl) {
+          document.getElementById('heroSky').style.backgroundImage = `url('${imageUrl}')`;
+          document.getElementById('heroSky').style.backgroundSize = 'cover';
+          document.getElementById('heroSky').style.backgroundPosition = 'center';
+          
+          // Update gallery
+          const name = escapeHtml(window.dest.name[lang] || window.dest.name.vi || window.dest.name.en);
+          document.getElementById('galleryMain').innerHTML = `<img src="${imageUrl}" alt="${name}" class="gallery-img">`;
+        }
+
+        document.getElementById('detailCoords').textContent = `${lat.toFixed(6)}°N, ${lng.toFixed(6)}°E`;
+        document.getElementById('detailCoordsText').textContent = `${lat.toFixed(6)}°N, ${lng.toFixed(6)}°E`;
+        document.getElementById('dirLink').href = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+
+        // Populate dynamic texts using centralized logic
+        populateDest();
+
+        // Map
+        const detailMap = L.map('detailMap', { zoomControl: false, attributionControl: false, scrollWheelZoom: false }).setView([lat, lng], 14);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(detailMap);
+
+        const icon = L.divIcon({
+          html: `<div style="background:${color};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.25);"></div>`,
+          className: '', iconSize: [32, 32], iconAnchor: [16, 16]
+        });
+        L.marker([lat, lng], { icon }).addTo(detailMap);
+
+        // Load boundaries
+        [
+          { file: 'Tô Múa - 63.geojson', color: '#2d6a4f' },
+          { file: 'Chiềng Khoa - 63.geojson', color: '#0e7490' },
+          { file: 'Suối Bàng - 63.geojson', color: '#d97706' }
+        ].forEach(({ file, color }) => {
+          fetch(file).then(r => r.json()).then(data => {
+            L.geoJSON(data, { style: { color, weight: 1.5, opacity: 0.5, fillColor: color, fillOpacity: 0.03 } }).addTo(detailMap);
+          }).catch(() => {});
+        });
+
+        // Invalidate map size after DOM is ready
+        setTimeout(() => detailMap.invalidateSize(), 300);
+
+        // Load nearby destinations
+        loadNearby(lat, lng, lang);
+
+        // Load comments
+        loadComments();
+
+      } catch (error) {
+        console.error('Error loading destination:', error);
+      }
+    }
+
+    async function loadNearby(lat, lng, lang) {
+      try {
+        const response = await fetch(`/api/destinations/nearby?lat=${lat}&lng=${lng}&radius=10000`);
+        const data = await response.json();
+        if (data.success) {
+          const nearby = data.data.filter(d => {
+            const dLat = d.lat || 0;
+            const dLng = d.lng || 0;
+            return dLat !== lat || dLng !== lng;
+          }).slice(0, 3);
+
+          const nearbyHtml = nearby.map(d => {
+            const name = d.name[lang] || d.name.vi || d.name.en;
+            return `<a href="detail.html?slug=${d.slug}" class="nearby-item">
+              <span class="nearby-icon">${typeEmoji[d.type] || '📍'}</span>
+              <span>${name}</span>
+            </a>`;
+          }).join('');
+          
+          const emptyMsg = I18nNew.get('nearby.empty') || 'Không có điểm đến lân cận';
+          document.getElementById('nearbyList').innerHTML = nearbyHtml || `<p class="muted">${emptyMsg}</p>`;
+        }
+      } catch (error) {
+        console.error('Error loading nearby:', error);
+      }
+    }
+
+    const typeEmoji = TomuaConfig.typeEmoji;
+
+    // Boundary loading is now inside loadDestination()
+
+        function t(key) {
+      return I18nNew.get(key, I18nNew.get('d'+dest.id+'.name', key)); // Fallback logic is handled by I18n module
+    }
+
+    function populateDest() {
+      if (!window.dest) {
+        console.error('populateDest: window.dest is null');
+        return;
+      }
+      
+      const lang = I18nNew.getLang() || 'vi';
+      const name = escapeHtml(window.dest.name[lang] || window.dest.name.vi || window.dest.name.en) || I18nNew.get('d'+window.dest.id+'.name');
+      const desc = window.dest.description ? (window.dest.description[lang] || window.dest.description.vi || window.dest.description.en || I18nNew.get('d'+window.dest.id+'.desc')) : I18nNew.get('d'+window.dest.id+'.desc');
+      const quoteStr = window.dest.quote ? (window.dest.quote[lang] || window.dest.quote.vi || window.dest.quote.en || I18nNew.get('d'+window.dest.id+'.quote')) : I18nNew.get('d'+window.dest.id+'.quote');
+      
+      document.title = name + ' — Tô Múa';
+      document.getElementById('detailName').textContent = name;
+      document.getElementById('heroKicker').textContent = I18nNew.get('kicker.'+window.dest.type) + ' ' + window.dest.region;
+      document.getElementById('detailRegion').textContent = I18nNew.get('region') + ': ' + window.dest.region;
+      document.getElementById('detailDesc').textContent = desc;
+      document.getElementById('pullQuote').textContent = '"' + quoteStr + '"';
+
+      const detailDescMore = document.getElementById('detailDescMore');
+      if (detailDescMore) detailDescMore.style.display = 'none';
+
+      const headings = {
+        vi: { intro: 'Giới thiệu', features: 'Đặc điểm nổi bật', gallery: 'Thư viện ảnh' },
+        en: { intro: 'About', features: 'Key features', gallery: 'Gallery' },
+        ko: { intro: '소개', features: '주요 특징', gallery: '갤러리' }
+      };
+      
+      const fallbackLang = headings[lang] ? lang : 'vi';
+      document.getElementById('headingIntro').textContent = I18nNew.get('detail.intro') || I18nNew.getCommon('nav.about') || headings[fallbackLang].intro;
+      document.getElementById('headingFeatures').textContent = I18nNew.get('detail.features') || headings[fallbackLang].features;
+      document.getElementById('headingGallery').textContent = I18nNew.get('detail.gallery') || headings[fallbackLang].gallery;
+
+      // Stats - read from database, fallback to i18n
+      const stats = window.dest.stats?.[lang] || window.dest.stats?.vi || window.dest.stats?.en;
+      if (stats && typeof stats === 'object' && Object.keys(stats).length > 0) {
+        document.getElementById('statsStrip').innerHTML = Object.entries(stats).map(([key, value]) => {
+          return `<div class="stat-cell"><div class="stat-value">${value}</div><div class="stat-label">${key}</div></div>`;
+        }).join('');
+      } else {
+        const statsStr = I18nNew.get('d'+window.dest.id+'.stats');
+        if (statsStr) {
+          document.getElementById('statsStrip').innerHTML = statsStr.split('|').map(s => {
+            const [l,v] = s.split(',');
+            return `<div class="stat-cell"><div class="stat-value">${v}</div><div class="stat-label">${l}</div></div>`;
+          }).join('');
+        }
+      }
+
+      // Info table - read from database, fallback to i18n
+      const info = window.dest.info?.[lang] || window.dest.info?.vi || window.dest.info?.en;
+      if (info && typeof info === 'object' && Object.keys(info).length > 0) {
+        document.getElementById('infoTable').innerHTML = Object.entries(info).map(([label, value]) => {
+          return `<tr><td class="info-label">${label}</td><td class="info-value">${value}</td></tr>`;
+        }).join('');
+      } else {
+        const infoStr = I18nNew.get('d'+window.dest.id+'.info');
+        if (infoStr) {
+          document.getElementById('infoTable').innerHTML = infoStr.split('|').map(s => {
+            const [l,v] = s.split(',');
+            return `<tr><td class="info-label">${l}</td><td class="info-value">${v}</td></tr>`;
+          }).join('');
+        }
+      }
+
+      // Visitor Notes - read from visitor_notes or fallback to metadata
+      const notesBlock = document.getElementById('visitorNotesBlock');
+      const notesList = document.getElementById('visitorNotesList');
+      
+      let notes = window.dest.visitor_notes || window.dest.metadata?.visitor_notes?.[lang] || window.dest.metadata?.visitor_notes?.vi;
+      
+      if (notes && Array.isArray(notes) && notes.length > 0) {
+        notesBlock.style.display = 'block';
+        notesList.innerHTML = notes.map(note => {
+          if (typeof note === 'string') {
+            // Legacy string support
+            let icon = '📌';
+            let text = note;
+            const match = note.match(/^(\p{Emoji}|\p{Extended_Pictographic})\s*(.*)$/u);
+            if (match) {
+              icon = match[1];
+              text = match[2];
+            }
+            return `<li><span class="note-icon">${icon}</span> <span>${text}</span></li>`;
+          } else if (note && note.text) {
+            // New object structure
+            const text = note.text[lang] || note.text.vi || note.text.en || '';
+            const icon = note.icon || '📌';
+            return `<li><span class="note-icon">${icon}</span> <span>${text}</span></li>`;
+          }
+          return '';
+        }).join('');
+      } else {
+        notesBlock.style.display = 'none';
+      }
+
+      // Gallery
+      const mainGalleryStr = I18nNew.get('gallery.main');
+      if (mainGalleryStr) {
+        document.getElementById('galleryMain').querySelector('.gallery-placeholder').textContent = mainGalleryStr;
+      }
+    }
+
+    function copyCoords() {
+      navigator.clipboard.writeText(`${window.dest.lat}, ${window.dest.lng}`).then(() => {
+        alert(I18nNew.get('copy_alert'));
+      });
+    }
+
+    // === COMMENTS ===
+    async function loadComments() {
+      if (!window.dest) return;
+      try {
+        const token = localStorage.getItem('accessToken');
+        const response = await fetch(`/api/destinations/${window.dest.id}/comments`, {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        });
+        const data = await response.json();
+        if (data.success) {
+          const container = document.getElementById('commentsList');
+          if (data.data.length === 0) {
+            container.innerHTML = '<p style="color: var(--muted); font-size: 14px;">Chưa có bình luận nào.</p>';
+          } else {
+            container.innerHTML = data.data.map(c => `
+              <div style="padding: 12px 0; border-bottom: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                  <strong style="font-size: 14px;">${c.user_name || 'Ẩn danh'}</strong>
+                  <span style="font-size: 12px; color: var(--muted);">${new Date(c.created_at).toLocaleDateString('vi-VN')}</span>
+                </div>
+                <p style="font-size: 14px; margin: 0;">${c.comment}</p>
+              </div>
+            `).join('');
+          }
+
+          // Show comment form if logged in
+          if (token) {
+            document.getElementById('commentForm').style.display = 'block';
+          }
+        }
+      } catch (error) {
+        console.error('Error loading comments:', error);
+      }
+    }
+
+    async function addComment() {
+      const input = document.getElementById('commentInput');
+      const comment = input.value.trim();
+      if (!comment) return alert('Vui lòng nhập bình luận');
+
+      try {
+        const token = localStorage.getItem('accessToken');
+        const response = await fetch(`/api/destinations/${window.dest.id}/comments`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ comment, action: 'comment' })
+        });
+        const data = await response.json();
+        if (data.success) {
+          input.value = '';
+          loadComments();
+        } else {
+          alert('Lỗi: ' + (data.message || 'Không thể gửi bình luận'));
+        }
+      } catch (error) {
+        alert('Lỗi: ' + error.message);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      await I18nNew.init('detail');
+      
+      document.addEventListener('i18n-changed', () => {
+        if (window.dest) populateDest();
+      });
+      
+      // Load destination after DOM and i18n are ready
+      await loadDestination();
+    });
+  </script>
+</body>
+</html>

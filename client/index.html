@@ -8,35 +8,12 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="lib/leaflet.css" />
+  <link rel="stylesheet" href="css/design-system.css" />
   <style>
     /* === PAGE TRANSITION === */
     body { opacity: 0; transition: opacity 0.4s ease-in-out; }
     body.page-fade-in { opacity: 1; }
     body.page-fade-out { opacity: 0; }
-
-    :root {
-      --bg: #f6f5f0;
-      --surface: #ffffff;
-      --fg: #1a2e1a;
-      --muted: #6b7b6b;
-      --border: #e0ded8;
-      --accent: #2d6a4f;
-      --accent-light: #40916c;
-      --accent-dark: #1b4332;
-      --warm: #d97706;
-      --warm-light: #f59e0b;
-      --waterfall: #0e7490;
-      --cave: #78716c;
-      --spirit: #9f1239;
-      --radius: 14px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
-      --shadow-lg: 0 4px 12px rgba(0,0,0,0.08), 0 16px 40px rgba(0,0,0,0.06);
-      --font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body { font-family: var(--font); color: var(--fg); background: var(--bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
-    img { max-width: 100%; display: block; }
     a { color: inherit; text-decoration: none; }
 
     .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
@@ -156,7 +133,13 @@
     @media (max-width: 768px) {
       .events-grid { grid-template-columns: 1fr; }
     }
-    
+
+    /* Filter Chips */
+    .filter-chip { padding: 8px 16px; border-radius: 100px; font-size: 13px; font-weight: 500; border: 1px solid var(--border); background: var(--surface); cursor: pointer; transition: all 150ms cubic-bezier(0.2, 0, 0, 1); display: inline-flex; align-items: center; gap: 6px; font-family: var(--font); }
+    .filter-chip:hover { border-color: var(--accent); background: rgba(45,106,79,0.04); }
+    .filter-chip.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .filter-chip.active:hover { background: var(--accent-dark); }
+
     /* View More Button */
     .view-more-container { text-align: center; margin-top: 40px; }
     .view-more-btn {
@@ -325,22 +308,8 @@
   <!-- STATS -->
   <section class="stats">
     <div class="container">
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-icon">📐</span>
-          <span class="stat-number">181,98 <span class="stat-unit">km²</span></span>
-          <span class="stat-label" data-i18n="stats.area">Diện tích tự nhiên</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-icon">👥</span>
-          <span class="stat-number">14.701</span>
-          <span class="stat-label" data-i18n="stats.population">Nhân khẩu</span>
-        </div>
-        <div class="stat-card">
-          <span class="stat-icon">🏘️</span>
-          <span class="stat-number">3</span>
-          <span class="stat-label" data-i18n="stats.merged">Xã cũ sáp nhập</span>
-        </div>
+      <div class="stats-grid" id="statsGrid">
+        <!-- Loaded dynamically from system_settings -->
       </div>
     </div>
   </section>
@@ -364,150 +333,6 @@
       </div>
     </div>
 
-    <script>
-      // Load destinations from API
-      const INITIAL_LIMIT = 6;
-      const LOAD_MORE_LIMIT = 3;
-      let currentOffset = 0;
-      let totalDestinations = 0;
-      let isLoading = false;
-      let allLoaded = false;
-
-      // Helper function to get type label from i18n
-      function getTypeLabel(type) {
-        return I18nNew.getCommon(`type.${type}`, type);
-      }
-
-      async function loadDestinationCards(isLoadMore = false) {
-        if (isLoading) return;
-        
-        isLoading = true;
-        const btn = document.getElementById('viewMoreBtn');
-        const btnText = document.getElementById('viewMoreText');
-        const btnArrow = btn.querySelector('.arrow');
-        
-        if (isLoadMore) {
-          btn.classList.add('loading');
-          btn.disabled = true;
-          btnText.textContent = I18nNew.get('map.loading', 'Đang tải...');
-          btnArrow.textContent = '⟳';
-        }
-
-        try {
-          const limit = isLoadMore ? LOAD_MORE_LIMIT : INITIAL_LIMIT;
-          const offset = isLoadMore ? currentOffset : 0;
-          
-          const response = await fetch(`/api/destinations?status=published&limit=${limit}&offset=${offset}`);
-          const data = await response.json();
-          
-          if (data.success) {
-            const grid = document.getElementById('destGrid');
-            const lang = I18nNew.getLang() || 'vi';
-            const newItems = data.data.items;
-            totalDestinations = data.data.pagination.total;
-            
-            // Update header with total count
-            const header = document.querySelector('[data-i18n="dest.title"]');
-            if (header) {
-              const titleTemplate = I18nNew.get('dest.title', 'Khám phá {{count}} điểm đến');
-              header.textContent = titleTemplate.replace('{{count}}', totalDestinations);
-            }
-            
-            // Generate HTML for new items
-            const newHtml = newItems.map((d, index) => {
-              const lat = d.lat || 0;
-              const lng = d.lng || 0;
-              const name = d.name[lang] || d.name.vi || d.name.en || 'Unknown';
-              const desc = d.description ? (d.description[lang] || d.description.vi || d.description.en || '') : '';
-              const typeLabel = getTypeLabel(d.type);
-              const imageUrl = d.image_url || null;
-              
-              return `
-                <a href="detail.html?slug=${d.slug}" class="dest-card type-${d.type}" style="animation-delay: ${(isLoadMore ? 0 : index) * 0.05}s">
-                  <div class="dest-img" ${imageUrl ? `style="background-image: url('${imageUrl}'); background-size: cover; background-position: center;"` : ''}>
-                    <span class="dest-type">${typeLabel}</span>
-                    <span class="dest-region">${d.region || 'Tô Múa'}</span>
-                    <h3>${name}</h3>
-                  </div>
-                  <div class="dest-body">
-                    <p>${desc}</p>
-                    <div class="dest-meta">
-                      <span>📍 ${lat.toFixed(6)}°N, ${lng.toFixed(6)}°E</span>
-                      <span>🏔️ ${d.region || 'Tô Múa'}</span>
-                    </div>
-                  </div>
-                </a>
-              `;
-            }).join('');
-
-            if (isLoadMore) {
-              // Append new items to existing grid
-              grid.insertAdjacentHTML('beforeend', newHtml);
-              currentOffset += newItems.length;
-            } else {
-              // Initial load
-              grid.innerHTML = newHtml;
-              currentOffset = newItems.length;
-            }
-
-            // Check if all items are loaded
-            allLoaded = currentOffset >= totalDestinations;
-            
-            // Update button state
-            updateViewMoreButton();
-          }
-        } catch (error) {
-          console.error('Error loading destinations:', error);
-        } finally {
-          isLoading = false;
-          btn.classList.remove('loading');
-          btn.disabled = false;
-        }
-      }
-
-      function updateViewMoreButton() {
-        const viewMoreContainer = document.getElementById('viewMoreContainer');
-        const btn = document.getElementById('viewMoreBtn');
-        const btnText = document.getElementById('viewMoreText');
-        const btnArrow = btn.querySelector('.arrow');
-        
-        if (totalDestinations <= INITIAL_LIMIT) {
-          // Hide button if total is less than or equal to initial limit
-          viewMoreContainer.style.display = 'none';
-        } else if (allLoaded) {
-          // Show "Thu gọn" button when all loaded
-          viewMoreContainer.style.display = 'block';
-          btnText.textContent = 'Thu gọn';
-          btnArrow.textContent = '↑';
-          btn.onclick = collapseDestinations;
-        } else {
-          // Show "Xem thêm" button
-          viewMoreContainer.style.display = 'block';
-          const remaining = totalDestinations - currentOffset;
-          btnText.textContent = `Xem thêm (${remaining})`;
-          btnArrow.textContent = '↓';
-          btn.onclick = () => loadDestinationCards(true);
-        }
-      }
-
-      function collapseDestinations() {
-        // Reset to initial state
-        currentOffset = 0;
-        allLoaded = false;
-        loadDestinationCards(false);
-        
-        // Scroll to destinations section
-        setTimeout(() => {
-          const destSection = document.getElementById('destinations');
-          if (destSection) {
-            destSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        }, 100);
-      }
-
-      // Initial load
-      loadDestinationCards(false);
-    </script>
   </section>
 
   <!-- EVENTS -->
@@ -518,12 +343,8 @@
         <h2 data-i18n="events.title">Sự kiện & Lễ hội</h2>
         <p data-i18n="events.subtitle">Khám phá các sự kiện và lễ hội đặc sắc tại Tô Múa</p>
       </div>
-      <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
-        <button class="filter-chip active" onclick="filterEvents('all', this)">Tất cả</button>
-        <button class="filter-chip" onclick="filterEvents('festival', this)">🎪 Lễ hội</button>
-        <button class="filter-chip" onclick="filterEvents('season', this)">🌿 Theo mùa</button>
-        <button class="filter-chip" onclick="filterEvents('food', this)">🍜 Ẩm thực</button>
-        <button class="filter-chip" onclick="filterEvents('cultural', this)">🎭 Văn hóa</button>
+      <div id="eventFilters" style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+        <!-- Loaded dynamically from system_settings -->
       </div>
       <div class="events-grid" id="eventsGrid">
         <!-- Loaded dynamically from API -->
@@ -535,47 +356,6 @@
       </div>
     </div>
 
-    <script>
-      let allEvents = [];
-      let currentEventFilter = 'all';
-      
-      function filterEvents(type, btn) {
-        currentEventFilter = type;
-        document.querySelectorAll('#events .filter-chip').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        renderEvents();
-      }
-      
-      function renderEvents() {
-        const grid = document.getElementById('eventsGrid');
-        const lang = I18nNew.getLang() || 'vi';
-        const typeIcons = { festival: '🎪', season: '🌿', experience: '⛰️', cultural: '🎭', sport: '🏃', food: '🍜', other: '📌' };
-        const filtered = currentEventFilter === 'all' ? allEvents : allEvents.filter(e => e.type === currentEventFilter);
-        
-        if (filtered.length === 0) {
-          grid.innerHTML = '<p style="color:var(--muted); text-align:center;">Không có sự kiện nào</p>';
-          return;
-        }
-        
-        const formatDate = (d) => { if (!d) return ''; return new Date(d).toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'}); };
-        
-        grid.innerHTML = filtered.map(event => {
-          const name = escapeHtml(event.name[lang] || event.name.vi || event.name.en);
-          const desc = event.description ? (event.description[lang] || event.description.vi || event.description.en || '') : '';
-          const icon = event.icon || typeIcons[event.type] || '📅';
-          
-          return `
-            <div class="event-card" onclick="window.location.href='detail.html?slug=${event.slug}'" style="cursor:pointer;">
-              <div class="event-icon">${icon}</div>
-              <h3>${name}</h3>
-              <p>${desc.substring(0, 120)}...</p>
-              <div class="event-meta">
-                <span>📅 ${formatDate(event.start_date)}</span>
-              </div>
-            </div>
-          `;
-        }).join('');
-      }
     </script>
   </section>
 
@@ -587,11 +367,8 @@
         <h2 data-i18n="routes.title">Tour gợi ý</h2>
         <p data-i18n="routes.subtitle">Khám phá Tô Múa theo những lộ trình được thiết kế sẵn</p>
       </div>
-      <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
-        <button class="filter-chip active" onclick="filterRoutes('all', this)">Tất cả</button>
-        <button class="filter-chip" onclick="filterRoutes('walk', this)">🚶 Đi bộ</button>
-        <button class="filter-chip" onclick="filterRoutes('bike', this)">🏍️ Xe máy</button>
-        <button class="filter-chip" onclick="filterRoutes('car', this)">🚗 Ô tô</button>
+      <div id="routeFilters" style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
+        <!-- Loaded dynamically from system_settings -->
       </div>
       <div class="routes-grid" id="routesGrid">
         <!-- Loaded dynamically from API -->
@@ -603,47 +380,6 @@
       </div>
     </div>
 
-    <script>
-      let allRoutes = [];
-      let currentRouteFilter = 'all';
-      
-      function filterRoutes(transport, btn) {
-        currentRouteFilter = transport;
-        document.querySelectorAll('#routes .filter-chip').forEach(c => c.classList.remove('active'));
-        btn.classList.add('active');
-        renderRoutes();
-      }
-      
-      function renderRoutes() {
-        const grid = document.getElementById('routesGrid');
-        const lang = I18nNew.getLang() || 'vi';
-        const filtered = currentRouteFilter === 'all' ? allRoutes : allRoutes.filter(r => r.transport === currentRouteFilter);
-        
-        if (filtered.length === 0) {
-          grid.innerHTML = '<p style="color:var(--muted); text-align:center;">Không có lộ trình nào</p>';
-          return;
-        }
-        
-        grid.innerHTML = filtered.map(route => {
-          const name = escapeHtml(route.name[lang] || route.name.vi || route.name.en);
-          const desc = route.description ? (route.description[lang] || route.description.vi || route.description.en || '') : '';
-          const stops = route.stops || [];
-          const stopsHtml = stops.map((s, i) => {
-            const stopName = s.destination_name ? (s.destination_name[lang] || s.destination_name.vi || s.destination_name.en) : 'Unknown';
-            return `<span class="route-stop"><span class="dot" style="background:var(--accent)"></span>${stopName}</span>${i < stops.length - 1 ? '<span class="route-arrow">→</span>' : ''}`;
-          }).join('');
-          
-          return `
-            <div class="route-card" onclick="window.location.href='detail.html?slug=${route.slug}'" style="cursor:pointer;">
-              <div class="route-header">
-                <h3>${name}</h3>
-              </div>
-              <p>${desc.substring(0, 150)}...</p>
-              <div class="route-stops">${stopsHtml || '<span style="color:var(--muted)">Chưa có điểm dừng</span>'}</div>
-            </div>
-          `;
-        }).join('');
-      }
     </script>
   </section>
 
@@ -680,142 +416,30 @@
           <a href="about.html" data-i18n="nav.about">Giới thiệu</a>
         </div>
         <div class="footer-col">
-          <h4 data-i18n="footer.services">Dịch vụ</h4>
+          <h4 data-i18n="footer.services">Thông tin khác</h4>
           <a href="#" data-i18n="footer.homestay">Lưu trú</a>
           <a href="#" data-i18n="footer.food">Ẩm thực</a>
-          <a href="#" data-i18n="footer.tour">Tour gợi ý</a>
-          <a href="#" data-i18n="footer.event">Sự kiện</a>
+          <a href="#routes" data-i18n="footer.tour">Tour gợi ý</a>
+          <a href="#events" data-i18n="footer.event">Sự kiện</a>
         </div>
         <div class="footer-col">
           <h4 data-i18n="footer.contact">Liên hệ</h4>
-          <a href="#" data-i18n="footer.ubnd">UBND xã Tô Múa</a>
-          <a href="#" data-i18n="footer.province">Tỉnh Sơn La</a>
-          <a href="admin.html" data-i18n="nav.admin">Quản trị hệ thống</a>
+          <a href="https://tomua.sonla.gov.vn" target="_blank" rel="noopener" data-i18n="footer.ubnd">UBND xã Tô Múa</a>
         </div>
       </div>
       <div class="footer-bottom">
-        <span data-i18n="footer.copyright">© 2026 Xã Tô Múa — Tỉnh Sơn La</span>
-        <span data-i18n="footer.powered">Xây dựng bằng công nghệ bản đồ số</span>
+        <span data-i18n="footer.copyright">© 2026 Xã Tô Múa</span>
       </div>
     </div>
   </footer>
 
   <script src="lib/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next/23.7.1/i18next.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next-http-backend/2.4.2/i18nextHttpBackend.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next-browser-languagedetector/8.2.1/i18nextBrowserLanguageDetector.min.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/config.js"></script>
-  <script src="js/i18n-new.js"></script>
-  <script>
-    // Define functions before calling them
-    async function loadEvents() {
-      try {
-        const response = await fetch('/api/events?status=published');
-        const data = await response.json();
-        if (data.success) {
-          allEvents = data.data.items;
-          renderEvents();
-        }
-      } catch (error) {
-        console.error('Error loading events:', error);
-      }
-    }
 
-    async function loadRoutes() {
-      try {
-        const response = await fetch('/api/routes?status=published');
-        const data = await response.json();
-        if (data.success) {
-          allRoutes = data.data.items;
-          renderRoutes();
-        }
-      } catch (error) {
-        console.error('Error loading routes:', error);
-      }
-    }
-
-    // Initialize i18n
-    I18nNew.init('homepage').then(() => {
-      // Load dynamic content after translations are loaded
-      loadDestinationCards();
-      loadEvents();
-      loadRoutes();
-    });
-
-    // Listen for language changes
-    document.addEventListener('i18n-changed', async () => {
-      // Reload dynamic content with new language
-      currentOffset = 0;
-      allLoaded = false;
-      loadDestinationCards();
-      loadEvents();
-      loadRoutes();
-    });
-
-    // === NAVBAR SCROLL ===
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-      navbar.classList.toggle('scrolled', window.scrollY > 60);
-    }, { passive: true });
-
-    // === MOBILE MENU ===
-    document.getElementById('mobileToggle').addEventListener('click', () => {
-      document.getElementById('navLinks').classList.toggle('open');
-    });
-
-    // === MINI MAP ===
-    const map = L.map('mini-map', { zoomControl: false, attributionControl: false }).setView(TomuaConfig.mapCenter, 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 18
-    }).addTo(map);
-
-    const communeColors = { 'Tô Múa': '#2d6a4f', 'Chiềng Khoa': '#0e7490', 'Suối Bàng': '#d97706' };
-
-    const geoFiles = [
-      { file: 'Tô Múa - 63.geojson', name: 'Tô Múa', color: '#2d6a4f' },
-      { file: 'Chiềng Khoa - 63.geojson', name: 'Chiềng Khoa', color: '#0e7490' },
-      { file: 'Suối Bàng - 63.geojson', name: 'Suối Bàng', color: '#d97706' }
-    ];
-
-    geoFiles.forEach(({ file, name, color }) => {
-      fetch(file).then(r => r.json()).then(data => {
-        L.geoJSON(data, {
-          style: { color: color, weight: 2.5, opacity: 0.8, fillColor: color, fillOpacity: 0.1, dashArray: '6 4' }
-        }).bindTooltip(name, { permanent: false, direction: 'center' }).addTo(map);
-      }).catch(() => {});
-    });
-
-    // Merged boundary
-    fetch('Tô Múa (phường xã) - 34.geojson').then(r => r.json()).then(data => {
-      L.geoJSON(data, {
-        style: { color: '#1b4332', weight: 3, opacity: 1, fillColor: '#1b4332', fillOpacity: 0.04 }
-      }).addTo(map);
-    }).catch(err => console.error('Error loading merged boundary:', err));
-
-    // Destination markers - fetch from API
-    const typeColors = TomuaConfig.typeColors;
-    const typeEmoji = TomuaConfig.typeEmoji;
-
-    async function loadDestinations() {
-      try {
-        const response = await fetch('/api/destinations?status=published');
-        const data = await response.json();
-        if (data.success) {
-          data.data.items.forEach(d => {
-            const lat = d.lat || 0;
-            const lng = d.lng || 0;
-            const name = d.name.vi || d.name.en || 'Unknown';
-            const icon = L.divIcon({
-              html: `<div style="background:${typeColors[d.type] || '#666'};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">${typeEmoji[d.type] || '📍'}</div>`,
-              className: '', iconSize: [32, 32], iconAnchor: [16, 16]
-            });
-            L.marker([lat, lng], { icon }).addTo(map).bindPopup(`<strong>${name}</strong>`);
-          });
-        }
-      } catch (error) {
-        console.error('Error loading destinations:', error);
-      }
-    }
-
-    loadDestinations();
-    setTimeout(() => map.invalidateSize(), 200);
-  </script>
+  <script type="module" src="./src/pages/index.js"></script>
 </body>
 </html>

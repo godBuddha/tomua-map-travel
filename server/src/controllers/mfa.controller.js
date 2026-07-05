@@ -113,6 +113,9 @@ const MFAController = {
   async status(req, res, next) {
     try {
       const user = await require('../models/user.model').findById(req.user.id);
+      if (!user) {
+        return success(res, { mfa_enabled: false, has_backup_codes: false });
+      }
       return success(res, {
         mfa_enabled: user.mfa_enabled || false,
         has_backup_codes: !!user.mfa_backup_codes

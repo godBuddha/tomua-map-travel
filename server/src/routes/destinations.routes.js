@@ -170,6 +170,7 @@ router.delete('/:id', authenticateToken, requireAdmin, DestinationController.des
 
 // Approval workflow
 router.post('/:id/submit-review', authenticateToken, requireAdminOrCollaborator, DestinationController.submitForReview);
+router.post('/:id/request-delete', authenticateToken, requireAdminOrCollaborator, DestinationController.requestDelete);
 router.post('/:id/approve', authenticateToken, requireAdmin, DestinationController.approve);
 router.post('/:id/reject', authenticateToken, requireAdmin, DestinationController.reject);
 

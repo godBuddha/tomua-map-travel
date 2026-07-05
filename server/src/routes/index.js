@@ -32,7 +32,9 @@ router.get('/stats', async (req, res) => {
     const [routeCount] = await db('routes').count('id as count');
     const [eventCount] = await db('events').count('id as count');
     const [userCount] = await db('users').count('id as count');
-    const [pendingCount] = await db('destinations').where('status', 'pending').count('id as count');
+    const [pendingCount] = await db('destinations').whereIn('status', ['pending', 'pending_edit', 'pending_delete']).count('id as count');
+    const [pendingRoutes] = await db('routes').whereIn('status', ['pending', 'pending_edit', 'pending_delete']).count('id as count');
+    const [pendingEvents] = await db('events').whereIn('status', ['pending', 'pending_edit', 'pending_delete']).count('id as count');
     const [onlineCount] = await db('users').where('is_online', true).count('id as count');
     
     res.json({
@@ -43,7 +45,9 @@ router.get('/stats', async (req, res) => {
         events: parseInt(eventCount.count),
         users: parseInt(userCount.count),
         onlineUsers: parseInt(onlineCount.count),
-        pending: parseInt(pendingCount.count)
+        pending: parseInt(pendingCount.count),
+        pendingRoutes: parseInt(pendingRoutes.count),
+        pendingEvents: parseInt(pendingEvents.count)
       }
     });
   } catch (error) {

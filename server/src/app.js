@@ -14,6 +14,9 @@ const routes = require('./routes');
 
 const app = express();
 
+// Trust proxy for rate limiting behind nginx
+app.set('trust proxy', 1);
+
 // Compression middleware
 app.use(compression({
   level: 6,
@@ -72,7 +75,7 @@ const limiter = rateLimit({
     success: false,
     message: 'Too many requests, please try again later.'
   },
-  validate: { trustProxy: false }
+  validate: { trustProxy: true }
 });
 app.use('/api/', limiter);
 
@@ -84,7 +87,7 @@ const authLimiter = rateLimit({
     success: false,
     message: 'Too many login attempts, please try again later.'
   },
-  validate: { trustProxy: false }
+  validate: { trustProxy: true }
 });
 app.use('/api/auth/login', authLimiter);
 

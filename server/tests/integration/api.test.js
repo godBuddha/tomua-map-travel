@@ -3,7 +3,7 @@ jest.mock('../../src/services/mfa.service', () => ({
   generateSecret: jest.fn().mockReturnValue({
     secret: 'TESTSECRET',
     otpauthUrl: 'otpauth://totp/test',
-    backupCodes: ['CODE1', 'CODE2']
+    backupCodes: ['CODE1', 'CODE2', 'CODE3', 'CODE4', 'CODE5', 'CODE6', 'CODE7', 'CODE8']
   }),
   verifyToken: jest.fn().mockReturnValue(true),
   enable: jest.fn().mockResolvedValue({ success: true }),

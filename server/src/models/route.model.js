@@ -15,7 +15,9 @@ const Route = {
           'route_stops.*',
           'destinations.name as destination_name',
           'destinations.type as destination_type',
-          'destinations.location as destination_location'
+          'destinations.location as destination_location',
+          db.raw('ST_Y(destinations.location::geometry) as destination_lat'),
+          db.raw('ST_X(destinations.location::geometry) as destination_lng')
         )
         .orderBy('route_stops.stop_order');
     }
@@ -32,7 +34,9 @@ const Route = {
           'route_stops.*',
           'destinations.name as destination_name',
           'destinations.type as destination_type',
-          'destinations.location as destination_location'
+          'destinations.location as destination_location',
+          db.raw('ST_Y(destinations.location::geometry) as destination_lat'),
+          db.raw('ST_X(destinations.location::geometry) as destination_lng')
         )
         .orderBy('route_stops.stop_order');
     }
@@ -110,7 +114,9 @@ const Route = {
         .select(
           'route_stops.*',
           'destinations.name as destination_name',
-          'destinations.type as destination_type'
+          'destinations.type as destination_type',
+          db.raw('ST_Y(destinations.location::geometry) as destination_lat'),
+          db.raw('ST_X(destinations.location::geometry) as destination_lng')
         )
         .orderBy('route_stops.stop_order');
     }
@@ -164,6 +170,10 @@ const Route = {
       updateData.rejection_reason = null;
     } else if (status === 'draft') {
       updateData.rejection_reason = rejectionReason;
+    } else if (status === 'pending_edit') {
+      updateData.rejection_reason = null;
+    } else if (status === 'pending_delete') {
+      updateData.rejection_reason = null;
     }
 
     const [route] = await db(TABLE)

@@ -146,7 +146,7 @@ const Destination = {
       SELECT d.*,
         ST_Y(d.location::geometry) as lat,
         ST_X(d.location::geometry) as lng,
-        ST_Distance(d.location, ST_SetSRID(ST_MakePoint(?, ?), 4326)) as distance,
+        ST_DistanceSphere(d.location, ST_SetSRID(ST_MakePoint(?, ?), 4326)) as distance,
         COALESCE((
           SELECT json_agg(json_build_object(
             'id', di.id, 'image_url', di.url, 'sort_order', di.sort_order
@@ -225,9 +225,13 @@ const Destination = {
       updateData.approved_at = new Date();
       updateData.rejection_reason = null;
     } else if (status === 'draft') {
-      // BUG-06 FIX: Controller calls updateStatus(id, 'draft', null, reason) when rejecting
-      // Previous code checked 'rejected' which never matched — rejection_reason was never saved
       updateData.rejection_reason = rejectionReason;
+    } else if (status === 'pending_edit') {
+      // Edit submitted for review — clear any previous rejection
+      updateData.rejection_reason = null;
+    } else if (status === 'pending_delete') {
+      // Deletion requested — clear any previous rejection
+      updateData.rejection_reason = null;
     }
 
     const [destination] = await db(TABLE)

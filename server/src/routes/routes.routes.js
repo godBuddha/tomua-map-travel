@@ -35,6 +35,7 @@ router.delete('/:id/stops/:stopId', authenticateToken, requireAdminOrCollaborato
 
 // Approval workflow
 router.post('/:id/submit-review', authenticateToken, requireAdminOrCollaborator, RouteController.submitForReview);
+router.post('/:id/request-delete', authenticateToken, requireAdminOrCollaborator, RouteController.requestDelete);
 router.post('/:id/approve', authenticateToken, requireAdmin, RouteController.approve);
 router.post('/:id/reject', authenticateToken, requireAdmin, RouteController.reject);
 

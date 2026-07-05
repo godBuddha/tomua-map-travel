@@ -26,6 +26,7 @@ router.delete('/:id', authenticateToken, requireAdmin, EventController.destroy);
 
 // Approval workflow
 router.post('/:id/submit-review', authenticateToken, requireAdminOrCollaborator, EventController.submitForReview);
+router.post('/:id/request-delete', authenticateToken, requireAdminOrCollaborator, EventController.requestDelete);
 router.post('/:id/approve', authenticateToken, requireAdmin, EventController.approve);
 router.post('/:id/reject', authenticateToken, requireAdmin, EventController.reject);
 

@@ -1,4 +1,4 @@
-// dynamic functionalities for Settings and I18n Content in Admin Panel
+// dynamic functionalities for Settings in Admin Panel
 
 // === SETTINGS MANAGEMENT ===
 async function loadSettings() {
@@ -7,8 +7,11 @@ async function loadSettings() {
     const data = await res.json();
     if (data.success && data.data) {
       const settings = data.data;
+      if (settings.siteName) document.getElementById('settingsSiteName').value = settings.siteName;
+      if (settings.defaultLang) document.getElementById('settingsDefaultLang').value = settings.defaultLang;
+      if (settings.languages) document.getElementById('settingsLanguages').value = settings.languages;
       if (settings.mapCenter) document.getElementById('settingsMapCenter').value = settings.mapCenter.join(', ');
-      if (settings.contactPhone) document.getElementById('settingsContactPhone')?.setAttribute('value', settings.contactPhone); // Will add this input if needed
+      if (settings.description) document.getElementById('settingsDescription').value = settings.description;
     }
   } catch (error) {
     console.error('Failed to load settings:', error);
@@ -24,15 +27,30 @@ async function saveSettings() {
   try {
     const token = localStorage.getItem('accessToken');
     
-    // Example: Save map center
+    const siteName = document.getElementById('settingsSiteName').value.trim();
+    const defaultLang = document.getElementById('settingsDefaultLang').value;
+    const languages = document.getElementById('settingsLanguages').value.trim();
     const mapCenterStr = document.getElementById('settingsMapCenter').value;
+    const description = document.getElementById('settingsDescription').value.trim();
+    
     const mapCenter = mapCenterStr.split(',').map(s => parseFloat(s.trim()));
     
+    const settingsToSave = [
+      { key: 'siteName', value: siteName, description: 'Tên website' },
+      { key: 'defaultLang', value: defaultLang, description: 'Ngôn ngữ mặc định' },
+      { key: 'languages', value: languages, description: 'Ngôn ngữ hỗ trợ' },
+      { key: 'description', value: description, description: 'Mô tả website' }
+    ];
+    
     if (mapCenter.length === 2 && !isNaN(mapCenter[0]) && !isNaN(mapCenter[1])) {
-      await fetch('/api/settings/mapCenter', {
+      settingsToSave.push({ key: 'mapCenter', value: mapCenter, description: 'Toạ độ trung tâm bản đồ (Vĩ độ, Kinh độ)' });
+    }
+
+    for (const setting of settingsToSave) {
+      await fetch(`/api/settings/${setting.key}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-        body: JSON.stringify({ value: mapCenter, description: 'Toạ độ trung tâm bản đồ (Vĩ độ, Kinh độ)' })
+        body: JSON.stringify({ value: setting.value, description: setting.description })
       });
     }
 
@@ -45,51 +63,7 @@ async function saveSettings() {
   }
 }
 
-// === OVERRIDE CONTENT_DB BEHAVIOR ===
-window.fetchTranslationsFromDB = async function() {
-  try {
-    const res = await fetch('/api/i18n/export/all');
-    const json = await res.json();
-    if (json.success && json.data) {
-      // Merge json.data into the global CONTENT_DB in memory
-      // json.data is formatted as: { "vi": { "key": "value" }, "en": { ... } }
-      const dbLangs = Object.keys(json.data);
-      
-      CONTENT_DB.forEach(item => {
-        dbLangs.forEach(lang => {
-          if (json.data[lang] && json.data[lang][item.key] !== undefined) {
-            item[lang] = json.data[lang][item.key];
-          }
-        });
-      });
-    }
-  } catch (error) {
-    console.error('Failed to load translations from DB:', error);
-  }
-};
-
-window.saveContentEditToDB = async function(page, key, lang, value) {
-  try {
-    const token = localStorage.getItem('accessToken');
-    const res = await fetch(`/api/i18n/${page}/${key}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-      body: JSON.stringify({ lang, value })
-    });
-    const data = await res.json();
-    if (!data.success) throw new Error(data.message);
-  } catch (error) {
-    console.error('Save I18n to DB Error:', error);
-    alert('Không thể lưu nội dung vào cơ sở dữ liệu: ' + error.message);
-    throw error;
-  }
-};
-
 document.addEventListener('DOMContentLoaded', async () => {
-  if (window.fetchTranslationsFromDB) {
-    await window.fetchTranslationsFromDB();
-    if (typeof renderContentList === 'function') renderContentList();
-  }
   if (typeof loadSettings === 'function') {
     await loadSettings();
   }

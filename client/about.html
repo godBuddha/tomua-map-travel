@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="lib/leaflet.css" />
+  <link rel="stylesheet" href="css/design-system.css" />
   <style>
     /* === PAGE TRANSITION === */
     body { opacity: 0; transition: opacity 0.4s ease-in-out; }
@@ -32,30 +33,6 @@
     }
   </style>
   <style>
-    :root {
-      --bg: #f6f5f0;
-      --surface: #ffffff;
-      --fg: #1a2e1a;
-      --muted: #6b7b6b;
-      --border: #e0ded8;
-      --accent: #2d6a4f;
-      --accent-light: #40916c;
-      --accent-dark: #1b4332;
-      --warm: #d97706;
-      --waterfall: #0e7490;
-      --cave: #78716c;
-      --spirit: #9f1239;
-      --radius: 14px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
-      --shadow-lg: 0 4px 12px rgba(0,0,0,0.08), 0 16px 40px rgba(0,0,0,0.06);
-      --font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body { font-family: var(--font); color: var(--fg); background: var(--bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
-    img { max-width: 100%; display: block; }
-    a { color: inherit; text-decoration: none; }
     .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
     /* NAV */
@@ -247,7 +224,6 @@
           <div class="commune-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           </div>
-          <div class="commune-code" data-i18n="merge.1.code">Mã: 04018</div>
           <h3 data-i18n="merge.1.name">Tô Múa</h3>
           <p data-i18n="merge.1.desc">Trung tâm hành chính mới. Nổi tiếng với Thác Nàng Tiên và cảnh quan núi rừng hùng vĩ.</p>
         </div>
@@ -255,7 +231,6 @@
           <div class="commune-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           </div>
-          <div class="commune-code" data-i18n="merge.2.code">Mã: 04036</div>
           <h3 data-i18n="merge.2.name">Chiềng Khoa</h3>
           <p data-i18n="merge.2.desc">Vùng đất hang động và di tích lịch sử — nơi lưu giữ dấu tích văn hóa Mường cổ.</p>
         </div>
@@ -263,7 +238,6 @@
           <div class="commune-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           </div>
-          <div class="commune-code" data-i18n="merge.3.code">Mã: 03994</div>
           <h3 data-i18n="merge.3.name">Suối Bàng</h3>
           <p data-i18n="merge.3.desc">Vùng cao nguyên với Hang mộ Tạng Mè — di tích khảo cổ quý giá của người Thái cổ.</p>
         </div>
@@ -283,19 +257,16 @@
         <div class="merger-node">
           <span class="node-icon">🟢</span>
           <div class="node-name" data-i18n="merge.1.name">Tô Múa</div>
-          <div class="node-code" data-i18n="merge.1.code">Mã: 04018</div>
         </div>
         <span class="merger-plus">+</span>
         <div class="merger-node">
           <span class="node-icon">🔵</span>
           <div class="node-name" data-i18n="merge.2.name">Chiềng Khoa</div>
-          <div class="node-code" data-i18n="merge.2.code">Mã: 04036</div>
         </div>
         <span class="merger-plus">+</span>
         <div class="merger-node">
           <span class="node-icon">🟠</span>
           <div class="node-name" data-i18n="merge.3.name">Suối Bàng</div>
-          <div class="node-code" data-i18n="merge.3.code">Mã: 03994</div>
         </div>
         <span class="merger-arrow">→</span>
         <div class="merger-result">
@@ -336,54 +307,6 @@
     </div>
   </section>
 
-  <!-- CONTACT -->
-  <section class="section">
-    <div class="container">
-      <div class="section-header">
-        <div class="kicker" data-i18n="contact.kicker">Liên hệ</div>
-        <h2 data-i18n="contact.title">Thông tin liên hệ</h2>
-      </div>
-      <div class="contact-grid">
-        <div class="contact-card">
-          <div class="contact-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          </div>
-          <div>
-            <h4 data-i18n="contact.ubnd.title">Ủy ban nhân dân xã Tô Múa</h4>
-            <p data-i18n="contact.ubnd.desc">Trụ sở UBND xã Tô Múa, tỉnh Sơn La</p>
-          </div>
-        </div>
-        <div class="contact-card">
-          <div class="contact-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-          </div>
-          <div>
-            <h4 data-i18n="contact.phone.title">Điện thoại</h4>
-            <p data-i18n="contact.phone.desc">Liên hệ UBND xã Tô Múa</p>
-          </div>
-        </div>
-        <div class="contact-card">
-          <div class="contact-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-          </div>
-          <div>
-            <h4 data-i18n="contact.province.title">Tỉnh Sơn La</h4>
-            <p data-i18n="contact.province.desc">Tỉnh Sơn La, Việt Nam</p>
-          </div>
-        </div>
-        <div class="contact-card">
-          <div class="contact-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-          </div>
-          <div>
-            <h4 data-i18n="contact.digital.title">Bản đồ số</h4>
-            <p data-i18n="contact.digital.desc">Hệ thống quản lý bản đồ du lịch số xã Tô Múa</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- FOOTER -->
   <footer>
     <div class="container">
@@ -407,78 +330,23 @@
         <div class="footer-col">
           <h4 data-i18n="footer.contact">Liên hệ</h4>
           <a href="#" data-i18n="footer.ubnd">UBND xã Tô Múa</a>
-          <a href="#" data-i18n="footer.province">Tỉnh Sơn La</a>
+          <a href="#" data-i18n="footer.admin">Quản trị</a>
           <a href="admin.html" data-i18n="nav.admin">Quản trị hệ thống</a>
         </div>
       </div>
       <div class="footer-bottom">
-        <span data-i18n="footer.copyright">© 2026 Xã Tô Múa — Tỉnh Sơn La</span>
-        <span data-i18n="footer.powered">Xây dựng bằng công nghệ bản đồ số</span>
+        <span data-i18n="footer.copyright">© 2026 Xã Tô Múa</span>
       </div>
     </div>
   </footer>
 
   <script src="lib/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next/23.7.1/i18next.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next-http-backend/2.4.2/i18nextHttpBackend.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next-browser-languagedetector/8.2.1/i18nextBrowserLanguageDetector.min.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/config.js"></script>
-  <script src="js/i18n-new.js"></script>
-  <script>
-    // === NAVBAR SCROLL ===
-    const navbar = document.getElementById('navbar');
-    window.addEventListener('scroll', () => {
-      navbar.classList.toggle('scrolled', window.scrollY > 60);
-    }, { passive: true });
 
-    // === MOBILE MENU ===
-    document.getElementById('mobileToggle').addEventListener('click', () => {
-      document.getElementById('navLinks').classList.toggle('open');
-    });
-
-    // === MAP ===
-    const map = L.map('about-map', { zoomControl: true, attributionControl: false }).setView(TomuaConfig.mapCenter, 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
-
-    const geoFiles = [
-      TomuaConfig.geoFiles[0],
-      TomuaConfig.geoFiles[1],
-      TomuaConfig.geoFiles[2]
-    ];
-
-    geoFiles.forEach(({ file, name, color }) => {
-      fetch(file).then(r => r.json()).then(data => {
-        L.geoJSON(data, {
-          style: { color: color, weight: 2.5, opacity: 0.8, fillColor: color, fillOpacity: 0.1, dashArray: '6 4' }
-        }).bindTooltip(name, { permanent: false, direction: 'center' }).addTo(map);
-      }).catch(() => {});
-    });
-
-    // Merged boundary
-    fetch('Tô Múa (phường xã) - 34.geojson').then(r => r.json()).then(data => {
-      L.geoJSON(data, {
-        style: { color: '#1b4332', weight: 3, opacity: 1, fillColor: '#1b4332', fillOpacity: 0.04 }
-      }).addTo(map);
-    }).catch(() => {});
-
-    setTimeout(() => map.invalidateSize(), 200);
-
-    // === I18N ===
-    document.addEventListener('DOMContentLoaded', async () => {
-      await I18nNew.init('about');
-      
-      // Listen for language changes
-      document.addEventListener('i18n-changed', () => {
-        // Re-apply translations to all data-i18n elements
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-          const key = el.getAttribute('data-i18n');
-          const translation = I18nNew.get(key);
-          if (translation && translation !== key) {
-            el.textContent = translation;
-          }
-        });
-        
-        // Update page title
-        document.title = I18nNew.get('about.hero.title', 'Giới thiệu') + ' — Xã Tô Múa';
-      });
-    });
-  </script>
+  <script type="module" src="./src/pages/about.js"></script>
 </body>
 </html>

@@ -7,31 +7,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/design-system.css" />
   <style>
     /* === PAGE TRANSITION === */
     body { opacity: 0; transition: opacity 0.4s ease-in-out; }
     body.page-fade-in { opacity: 1; }
     body.page-fade-out { opacity: 0; }
-
-    :root {
-      --bg: #f6f5f0;
-      --surface: #ffffff;
-      --fg: #1a2e1a;
-      --muted: #6b7b6b;
-      --border: #e0ded8;
-      --accent: #2d6a4f;
-      --accent-light: #40916c;
-      --accent-dark: #1b4332;
-      --warm: #d97706;
-      --danger: #dc2626;
-      --danger-light: #fef2f2;
-      --radius: 14px;
-      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
-      --shadow-lg: 0 4px 12px rgba(0,0,0,0.08), 0 16px 40px rgba(0,0,0,0.06);
-      --shadow-xl: 0 8px 24px rgba(0,0,0,0.1), 0 24px 60px rgba(0,0,0,0.08);
-      --font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-      --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
-    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; }
     body {
@@ -516,7 +497,7 @@
           <span class="stat-lbl" data-i18n="stat_pop">nhân khẩu</span>
         </div>
         <div class="visual-stat-item">
-          <span class="stat-num">6</span>
+          <span class="stat-num" id="destCount">6</span>
           <span class="stat-lbl" data-i18n="stat_dest">điểm du lịch</span>
         </div>
       </div>
@@ -542,7 +523,7 @@
       <span id="errorText" data-i18n="error_invalid">Tên đăng nhập hoặc mật khẩu không đúng</span>
     </div>
 
-    <form id="loginForm" onsubmit="return handleLogin(event)">
+    <form id="loginForm">
       <!-- Username -->
       <div class="form-group">
         <label for="username" data-i18n="label_username">Tên đăng nhập</label>
@@ -562,7 +543,7 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </span>
           <input type="password" id="password" class="form-input" placeholder="Nhập mật khẩu" data-i18n-placeholder="ph_password" autocomplete="current-password" required>
-          <button type="button" class="toggle-pw" onclick="togglePassword()" aria-label="Hiện mật khẩu">
+          <button type="button" class="toggle-pw" aria-label="Hiện mật khẩu">
             <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           </button>
         </div>
@@ -598,7 +579,7 @@
         <span id="mfaErrorText"></span>
       </div>
 
-      <form onsubmit="return handleMfaVerify(event)">
+      <form onsubmit="return false;" id="mfaFormInner">
         <div class="form-group">
           <label for="mfaToken">Mã xác thực (6 số)</label>
           <div class="input-wrap">
@@ -633,7 +614,7 @@
         <span id="backupErrorText"></span>
       </div>
 
-      <form onsubmit="return handleBackupVerify(event)">
+      <form onsubmit="return false;" id="backupFormInner">
         <div class="form-group">
           <label for="backupCode">Mã dự phòng</label>
           <div class="input-wrap">
@@ -681,16 +662,6 @@
       <a href="#" style="font-size: 13px; color: var(--accent); font-weight: 600;" onclick="showRegister(); return false;">Đăng ký ngay</a>
     </div>
 
-    <!-- Demo accounts hint (hidden by default, shown via JS in dev) -->
-    <div id="demoHint" style="margin-top:16px; padding:12px 16px; background:rgba(14,116,144,0.06); border-radius:10px; border:1px solid rgba(14,116,144,0.12); display:none;">
-      <div style="font-size:11px; font-weight:600; color:#0e7490; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;">Demo — Tài khoản thử nghiệm</div>
-      <div style="display:flex; gap:12px; font-size:12px; color:var(--muted);">
-        <div style="flex:1;"><strong style="color:var(--fg);">Admin:</strong> <code style="background:var(--bg); padding:1px 6px; border-radius:4px;">admin</code></div>
-        <div style="flex:1;"><strong style="color:var(--fg);">Cộng tác viên:</strong> <code style="background:var(--bg); padding:1px 6px; border-radius:4px;">ctv1</code></div>
-      </div>
-      <div style="font-size:11px; color:var(--muted); margin-top:4px;">Mật khẩu: bất kỳ</div>
-    </div>
-
     <!-- Register Form (hidden by default) -->
     <div id="registerForm" style="display: none;">
       <div class="form-header">
@@ -704,7 +675,7 @@
         <span id="registerErrorText"></span>
       </div>
 
-      <form onsubmit="return handleRegister(event)">
+      <form onsubmit="return false;" id="registerFormInner">
         <div class="form-group">
           <label>Họ và tên</label>
           <div class="input-wrap">
@@ -763,272 +734,12 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next/23.7.1/i18next.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next-http-backend/2.4.2/i18nextHttpBackend.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/i18next-browser-languagedetector/8.2.1/i18nextBrowserLanguageDetector.min.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/config.js"></script>
-  <script src="js/i18n-new.js"></script>
-  <script>
-    // Initialize i18n
-    I18nNew.init('login');
 
-    // ===== Password toggle =====
-    function togglePassword() {
-      const pw = document.getElementById('password');
-      const icon = document.getElementById('eyeIcon');
-      if (pw.type === 'password') {
-        pw.type = 'text';
-        icon.innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/>';
-      } else {
-        pw.type = 'password';
-        icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
-      }
-    }
-
-    // ===== Login handler =====
-    let pendingMfaUserId = null;
-
-    async function handleLogin(e) {
-      e.preventDefault();
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value;
-      const errorEl = document.getElementById('formError');
-      const errorText = document.getElementById('errorText');
-      const btn = document.getElementById('btnLogin');
-
-      if (!username || !password) {
-        errorText.textContent = I18nNew.get('error_empty', 'Please fill in all fields');
-        errorEl.classList.add('show');
-        return false;
-      }
-
-      errorEl.classList.remove('show');
-      btn.classList.add('loading');
-
-      try {
-        const response = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password })
-        });
-
-        const data = await response.json();
-        btn.classList.remove('loading');
-
-        if (data.success) {
-          // Check if MFA is required
-          if (data.data.mfa_required) {
-            pendingMfaUserId = data.data.user_id;
-            showMfaForm();
-            return false;
-          }
-          
-          const { user, accessToken, refreshToken } = data.data;
-          localStorage.setItem('accessToken', accessToken);
-          localStorage.setItem('refreshToken', refreshToken);
-          localStorage.setItem('tm_user', JSON.stringify(user));
-          localStorage.setItem('tm_role', user.role);
-          window.location.href = user.role === 'collaborator' ? 'collaborator.html' : 'admin.html';
-        } else {
-          errorText.textContent = data.message || I18nNew.get('error_invalid', 'Invalid username or password');
-          errorEl.classList.add('show');
-        }
-      } catch (error) {
-        btn.classList.remove('loading');
-        errorText.textContent = I18nNew.get('error_invalid', 'Invalid username or password');
-        errorEl.classList.add('show');
-      }
-
-      return false;
-    }
-
-    // Show demo accounts hint in development
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      document.getElementById('demoHint').style.display = 'block';
-    }
-
-    // Clear error on input
-    document.getElementById('username').addEventListener('input', () => {
-      document.getElementById('formError').classList.remove('show');
-    });
-    document.getElementById('password').addEventListener('input', () => {
-      document.getElementById('formError').classList.remove('show');
-    });
-
-    // ===== Register =====
-    function showRegister() {
-      document.getElementById('loginForm').style.display = 'none';
-      document.querySelector('.form-header').style.display = 'none';
-      document.querySelector('.form-divider').style.display = 'none';
-      document.querySelector('.lang-selector').style.display = 'none';
-      document.querySelector('[data-i18n="or"]').parentElement.previousElementSibling.style.display = 'none';
-      document.getElementById('registerForm').style.display = 'block';
-    }
-
-    function showLogin() {
-      document.getElementById('loginForm').style.display = 'block';
-      document.querySelector('.form-header').style.display = 'block';
-      document.querySelector('.form-divider').style.display = 'block';
-      document.querySelector('.lang-selector').style.display = 'block';
-      document.getElementById('registerForm').style.display = 'none';
-    }
-
-    async function handleRegister(e) {
-      e.preventDefault();
-      const name = document.getElementById('regName').value.trim();
-      const email = document.getElementById('regEmail').value.trim();
-      const username = document.getElementById('regUsername').value.trim();
-      const password = document.getElementById('regPassword').value;
-
-      const errorEl = document.getElementById('registerError');
-      const errorText = document.getElementById('registerErrorText');
-      const btn = document.getElementById('btnRegister');
-
-      if (!name || !email || !username || !password) {
-        errorText.textContent = 'Vui lòng điền đầy đủ thông tin';
-        errorEl.classList.add('show');
-        return false;
-      }
-
-      if (password.length < 6) {
-        errorText.textContent = 'Mật khẩu phải có tối thiểu 6 ký tự';
-        errorEl.classList.add('show');
-        return false;
-      }
-
-      errorEl.classList.remove('show');
-      btn.classList.add('loading');
-
-      try {
-        const response = await fetch('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, username, password })
-        });
-
-        const data = await response.json();
-        btn.classList.remove('loading');
-
-        if (data.success) {
-          alert('Đăng ký thành công! Vui lòng đăng nhập.');
-          showLogin();
-          document.getElementById('username').value = username;
-          document.getElementById('password').value = password;
-        } else {
-          errorText.textContent = data.message || 'Đăng ký thất bại';
-          errorEl.classList.add('show');
-        }
-      } catch (error) {
-        btn.classList.remove('loading');
-        errorText.textContent = 'Lỗi kết nối: ' + error.message;
-        errorEl.classList.add('show');
-      }
-
-      return false;
-    }
-
-    // ===== MFA Functions =====
-    function showMfaForm() {
-      document.getElementById('loginForm').style.display = 'none';
-      document.getElementById('mfaForm').style.display = 'block';
-      document.getElementById('backupCodeForm').style.display = 'none';
-      document.getElementById('mfaToken').focus();
-    }
-
-    function showBackupCodeForm() {
-      document.getElementById('mfaForm').style.display = 'none';
-      document.getElementById('backupCodeForm').style.display = 'block';
-      document.getElementById('backupCode').focus();
-    }
-
-    async function handleMfaVerify(e) {
-      e.preventDefault();
-      const token = document.getElementById('mfaToken').value.trim();
-      const errorEl = document.getElementById('mfaError');
-      const errorText = document.getElementById('mfaErrorText');
-      const btn = document.getElementById('btnMfa');
-
-      if (!token || token.length !== 6) {
-        errorText.textContent = 'Vui lòng nhập mã 6 số';
-        errorEl.classList.add('show');
-        return false;
-      }
-
-      errorEl.classList.remove('show');
-      btn.classList.add('loading');
-
-      try {
-        const response = await fetch('/api/mfa/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: pendingMfaUserId, token })
-        });
-
-        const data = await response.json();
-        btn.classList.remove('loading');
-
-        if (data.success) {
-          const { user, accessToken, refreshToken } = data.data;
-          localStorage.setItem('accessToken', accessToken);
-          localStorage.setItem('refreshToken', refreshToken);
-          localStorage.setItem('tm_user', JSON.stringify(user));
-          localStorage.setItem('tm_role', user.role);
-          window.location.href = user.role === 'collaborator' ? 'collaborator.html' : 'admin.html';
-        } else {
-          errorText.textContent = data.message || 'Mã xác thực không đúng';
-          errorEl.classList.add('show');
-        }
-      } catch (error) {
-        btn.classList.remove('loading');
-        errorText.textContent = 'Lỗi kết nối: ' + error.message;
-        errorEl.classList.add('show');
-      }
-
-      return false;
-    }
-
-    async function handleBackupVerify(e) {
-      e.preventDefault();
-      const backupCode = document.getElementById('backupCode').value.trim();
-      const errorEl = document.getElementById('backupError');
-      const errorText = document.getElementById('backupErrorText');
-      const btn = document.getElementById('btnBackup');
-
-      if (!backupCode) {
-        errorText.textContent = 'Vui lòng nhập mã dự phòng';
-        errorEl.classList.add('show');
-        return false;
-      }
-
-      errorEl.classList.remove('show');
-      btn.classList.add('loading');
-
-      try {
-        const response = await fetch('/api/mfa/verify', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: pendingMfaUserId, backupCode })
-        });
-
-        const data = await response.json();
-        btn.classList.remove('loading');
-
-        if (data.success) {
-          const { user, accessToken, refreshToken } = data.data;
-          localStorage.setItem('accessToken', accessToken);
-          localStorage.setItem('refreshToken', refreshToken);
-          localStorage.setItem('tm_user', JSON.stringify(user));
-          localStorage.setItem('tm_role', user.role);
-          window.location.href = user.role === 'collaborator' ? 'collaborator.html' : 'admin.html';
-        } else {
-          errorText.textContent = data.message || 'Mã dự phòng không đúng';
-          errorEl.classList.add('show');
-        }
-      } catch (error) {
-        btn.classList.remove('loading');
-        errorText.textContent = 'Lỗi kết nối: ' + error.message;
-        errorEl.classList.add('show');
-      }
-
-      return false;
-    }
-  </script>
+  <script type="module" src="./src/pages/login.js"></script>
 </body>
 </html>

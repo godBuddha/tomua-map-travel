@@ -1,8 +1,11 @@
 const Route = require('../models/route.model');
 const Comment = require('../models/comment.model');
+const CacheService = require('../services/cache.service');
 const OsrmService = require('../services/osrm.service');
 const db = require('../config/database');
 const { success, created, noContent, badRequest, notFound, forbidden } = require('../utils/response');
+
+const ROUTE_CACHE_TTL = 3600; // 1 hour
 
 const RouteController = {
   async index(req, res, next) {
@@ -30,7 +33,19 @@ const RouteController = {
         filters.collaborator_id = req.user.id;
       }
 
+      // Cache public requests only
+      const cacheKey = `routes:${JSON.stringify(filters)}`;
+      if (!req.user) {
+        const cached = await CacheService.get(cacheKey);
+        if (cached) return success(res, cached);
+      }
+
       const result = await Route.findAll(filters);
+
+      if (!req.user) {
+        await CacheService.set(cacheKey, result, ROUTE_CACHE_TTL);
+      }
+
       return success(res, result);
     } catch (error) {
       next(error);
@@ -40,6 +55,10 @@ const RouteController = {
   async show(req, res, next) {
     try {
       const { idOrSlug } = req.params;
+
+      const cacheKey = `route:${idOrSlug}`;
+      const cached = await CacheService.get(cacheKey);
+      if (cached) return success(res, cached);
 
       let route;
       if (idOrSlug.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
@@ -52,6 +71,7 @@ const RouteController = {
         return notFound(res, 'Route not found');
       }
 
+      await CacheService.set(cacheKey, route, ROUTE_CACHE_TTL);
       return success(res, route);
     } catch (error) {
       next(error);
@@ -81,6 +101,8 @@ const RouteController = {
         }));
         await db('route_stops').insert(stopsData);
       }
+
+      await CacheService.delPattern('routes:*');
 
       const fullRoute = await Route.findById(route.id);
       return created(res, fullRoute);
@@ -114,6 +136,22 @@ const RouteController = {
           routeData[field] = routeDataRaw[field];
         }
       }
+
+      // Collaborator edits require admin review
+      if (req.user.role === 'collaborator') {
+        routeData.status = 'pending_edit';
+        const originalData = {};
+        for (const field of allowedFields) {
+          if (route[field] !== undefined) {
+            originalData[field] = route[field];
+          }
+        }
+        routeData.metadata = {
+          ...(route.metadata || {}),
+          original_before_edit: originalData,
+          previous_status: route.status
+        };
+      }
       
       const updated = await Route.update(id, routeData);
 
@@ -134,6 +172,10 @@ const RouteController = {
         }
       }
 
+      await CacheService.del(`route:${id}`);
+      if (route.slug) await CacheService.del(`route:${route.slug}`);
+      await CacheService.delPattern('routes:*');
+
       const fullRoute = await Route.findById(id);
       return success(res, fullRoute);
     } catch (error) {
@@ -150,8 +192,61 @@ const RouteController = {
         return notFound(res, 'Route not found');
       }
 
+      // Collaborators cannot delete directly — must use requestDelete
+      if (req.user.role === 'collaborator') {
+        return forbidden(res, 'Collaborators must request deletion instead of deleting directly');
+      }
+
       await Route.delete(id);
+
+      await CacheService.del(`route:${id}`);
+      if (route.slug) await CacheService.del(`route:${route.slug}`);
+      await CacheService.delPattern('routes:*');
+
       return noContent(res);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async requestDelete(req, res, next) {
+    try {
+      const { id } = req.params;
+      const route = await Route.findById(id);
+
+      if (!route) {
+        return notFound(res, 'Route not found');
+      }
+
+      if (req.user.role === 'collaborator' && route.created_by !== req.user.id) {
+        return forbidden(res, 'You can only request deletion of your own routes');
+      }
+
+      if (route.status === 'pending_delete') {
+        return badRequest(res, 'Deletion already requested');
+      }
+
+      const metadata = {
+        ...(route.metadata || {}),
+        previous_status: route.status
+      };
+
+      await Route.update(id, { status: 'pending_delete', metadata });
+
+      await Comment.create({
+        entity_type: 'route',
+        entity_id: id,
+        user_id: req.user.id,
+        comment: 'Deletion requested',
+        action: 'request_changes'
+      });
+
+      await CacheService.del(`route:${id}`);
+      if (route.slug) await CacheService.del(`route:${route.slug}`);
+      await CacheService.delPattern('routes:*');
+
+      const updated = await Route.findById(id);
+      return success(res, updated);
     } catch (error) {
       next(error);
     }
@@ -284,10 +379,31 @@ const RouteController = {
         return notFound(res, 'Route not found');
       }
 
-      if (route.status !== 'pending') {
+      if (!['pending', 'pending_edit', 'pending_delete'].includes(route.status)) {
         return badRequest(res, 'Only pending routes can be approved');
       }
 
+      // If approving deletion, actually delete
+      if (route.status === 'pending_delete') {
+        await db('route_stops').where('route_id', id).del();
+        await Route.delete(id);
+
+        await Comment.create({
+          entity_type: 'route',
+          entity_id: id,
+          user_id: req.user.id,
+          comment: req.body.comment || 'Deletion approved',
+          action: 'approve'
+        });
+
+        await CacheService.del(`route:${id}`);
+        if (route.slug) await CacheService.del(`route:${route.slug}`);
+        await CacheService.delPattern('routes:*');
+
+        return success(res, { message: 'Route deleted' });
+      }
+
+      // Approve new or edited route -> published
       const updated = await Route.updateStatus(id, 'published', req.user.id);
 
       await Comment.create({
@@ -297,6 +413,10 @@ const RouteController = {
         comment: req.body.comment || 'Approved',
         action: 'approve'
       });
+
+      await CacheService.del(`route:${id}`);
+      if (route.slug) await CacheService.del(`route:${route.slug}`);
+      await CacheService.delPattern('routes:*');
 
       return success(res, updated);
     } catch (error) {
@@ -319,10 +439,63 @@ const RouteController = {
         return notFound(res, 'Route not found');
       }
 
-      if (route.status !== 'pending') {
+      if (!['pending', 'pending_edit', 'pending_delete'].includes(route.status)) {
         return badRequest(res, 'Only pending routes can be rejected');
       }
 
+      // If rejecting an edit, rollback to original data
+      if (route.status === 'pending_edit') {
+        const metadata = route.metadata || {};
+        const originalData = metadata.original_before_edit || {};
+        const previousStatus = metadata.previous_status || 'draft';
+
+        const rollbackData = { ...originalData };
+        rollbackData.status = previousStatus;
+        rollbackData.rejection_reason = reason;
+        rollbackData.metadata = null;
+
+        await Route.update(id, rollbackData);
+
+        await Comment.create({
+          entity_type: 'route',
+          entity_id: id,
+          user_id: req.user.id,
+          comment: reason,
+          action: 'reject'
+        });
+
+        await CacheService.del(`route:${id}`);
+        if (route.slug) await CacheService.del(`route:${route.slug}`);
+        await CacheService.delPattern('routes:*');
+
+        const updated = await Route.findById(id);
+        return success(res, updated);
+      }
+
+      // If rejecting deletion, restore previous status
+      if (route.status === 'pending_delete') {
+        const metadata = route.metadata || {};
+        const previousStatus = metadata.previous_status || 'draft';
+
+        await Route.update(id, { status: previousStatus, rejection_reason: reason, metadata: null });
+
+        await Comment.create({
+          entity_type: 'route',
+          entity_id: id,
+          user_id: req.user.id,
+          comment: reason,
+          action: 'reject'
+        });
+
+        await CacheService.del(`route:${id}`);
+        if (route.slug) await CacheService.del(`route:${route.slug}`);
+        await CacheService.delPattern('routes:*');
+
+        const updated = await Route.findById(id);
+        return success(res, updated);
+      }
+
+      // Standard rejection (pending -> draft)
       const updated = await Route.updateStatus(id, 'draft', null, reason);
 
       await Comment.create({
@@ -332,6 +505,10 @@ const RouteController = {
         comment: reason,
         action: 'reject'
       });
+
+      await CacheService.del(`route:${id}`);
+      if (route.slug) await CacheService.del(`route:${route.slug}`);
+      await CacheService.delPattern('routes:*');
 
       return success(res, updated);
     } catch (error) {

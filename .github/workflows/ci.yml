@@ -81,8 +81,7 @@ jobs:
 
       - name: Run ESLint
         working-directory: ./server
-        run: npx eslint src/ --ext .js
-        continue-on-error: true
+        run: npm run lint
 
   security:
     name: Security Scan

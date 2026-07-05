@@ -1,6 +1,9 @@
 const I18n = require('../models/i18n.model');
+const CacheService = require('../services/cache.service');
 const { success, created, badRequest, notFound } = require('../utils/response');
 const { supportedLanguages } = require('../config/i18n');
+
+const I18N_CACHE_TTL = 86400; // 24 hours
 
 const I18nController = {
   async getPage(req, res, next) {
@@ -9,9 +12,19 @@ const I18nController = {
       const { lang } = req.query;
 
       if (lang) {
+        const cacheKey = `i18n:${page}:${lang}`;
+        const cached = await CacheService.get(cacheKey);
+        if (cached) return success(res, cached);
+
         const translations = await I18n.findByPageAndLang(page, lang);
-        return success(res, { page, lang, translations });
+        const result = { page, lang, translations };
+        await CacheService.set(cacheKey, result, I18N_CACHE_TTL);
+        return success(res, result);
       }
+
+      const cacheKey = `i18n:${page}`;
+      const cached = await CacheService.get(cacheKey);
+      if (cached) return success(res, cached);
 
       const rows = await I18n.findByPage(page);
       const translations = {};
@@ -22,7 +35,9 @@ const I18nController = {
         translations[row.key][row.lang] = row.value;
       });
 
-      return success(res, { page, translations });
+      const result = { page, translations };
+      await CacheService.set(cacheKey, result, I18N_CACHE_TTL);
+      return success(res, result);
     } catch (error) {
       next(error);
     }
@@ -36,8 +51,14 @@ const I18nController = {
         return badRequest(res, 'Unsupported language');
       }
 
+      const cacheKey = `i18n:${page}:${lang}`;
+      const cached = await CacheService.get(cacheKey);
+      if (cached) return success(res, cached);
+
       const translations = await I18n.findByPageAndLang(page, lang);
-      return success(res, { page, lang, translations });
+      const result = { page, lang, translations };
+      await CacheService.set(cacheKey, result, I18N_CACHE_TTL);
+      return success(res, result);
     } catch (error) {
       next(error);
     }
@@ -57,6 +78,7 @@ const I18nController = {
       }
 
       const result = await I18n.upsert(page, key, lang, value, req.user.id);
+      await CacheService.delPattern('i18n:*');
       return success(res, result);
     } catch (error) {
       next(error);
@@ -80,6 +102,7 @@ const I18nController = {
       }
 
       const results = await I18n.bulkUpsert(page, lang, translations, req.user.id);
+      await CacheService.delPattern('i18n:*');
       return success(res, { page, lang, count: results.length });
     } catch (error) {
       next(error);

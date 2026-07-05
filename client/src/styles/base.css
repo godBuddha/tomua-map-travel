@@ -1,0 +1,57 @@
+:root {
+  --bg: #f6f5f0;
+  --surface: #ffffff;
+  --fg: #1a2e1a;
+  --muted: #6b7b6b;
+  --border: #e0ded8;
+  --accent: #2d6a4f;
+  --accent-light: #40916c;
+  --accent-dark: #1b4332;
+  --warm: #d97706;
+  --danger: #dc2626;
+  --waterfall: #0e7490;
+  --cave: #78716c;
+  --spirit: #9f1239;
+  --radius: 14px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+  --font: 'Be Vietnam Pro', -apple-system, BlinkMacFont, system-ui, sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); color: var(--fg); background: var(--bg); line-height: 1.6; }
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-dark); }
+.btn-outline { background: transparent; color: var(--fg); border: 1px solid var(--border); }
+.btn-outline:hover { background: var(--bg); }
+
+.badge {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-green { background: rgba(45,106,79,0.1); color: var(--accent); }
+.badge-blue { background: rgba(14,116,144,0.1); color: #0e7490; }
+.badge-amber { background: rgba(217,119,6,0.1); color: #b45309; }
+
+body { opacity: 0; transition: opacity 0.4s ease-in-out; }
+body.page-fade-in { opacity: 1; }

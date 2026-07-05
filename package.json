@@ -6,7 +6,20 @@
     "lib": "lib"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "npm run lint --prefix server && npm run lint --prefix client",
+    "format": "npm run format --prefix server && npm run format --prefix client",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "server/src/**/*.js": [
+      "eslint --fix --config server/.eslintrc.json",
+      "prettier --write"
+    ],
+    "client/src/**/*.js": [
+      "eslint --fix --config client/.eslintrc.json",
+      "prettier --write"
+    ]
   },
   "keywords": [],
   "author": "",
@@ -18,5 +31,9 @@
     "i18next-browser-languagedetector": "^8.2.1",
     "i18next-http-backend": "^4.0.0",
     "puppeteer": "^25.2.1"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8"
   }
 }

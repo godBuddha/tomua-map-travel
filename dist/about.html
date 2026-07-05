@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Giới thiệu — Xã Tô Múa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    /* === PAGE TRANSITION === */
+    body { opacity: 0; transition: opacity 0.4s ease-in-out; }
+    body.page-fade-in { opacity: 1; }
+    body.page-fade-out { opacity: 0; }
+
+    /* Enhance hero transition */
+    .about-hero h1, .about-hero p {
+      transform: translateY(20px);
+      opacity: 0;
+      transition: transform 0.6s ease-out, opacity 0.6s ease-out;
+    }
+    body.page-fade-in .about-hero h1 {
+      transform: translateY(0);
+      opacity: 1;
+      transition-delay: 0.2s;
+    }
+    body.page-fade-in .about-hero p {
+      transform: translateY(0);
+      opacity: 1;
+      transition-delay: 0.4s;
+    }
+  </style>
+  <style>
+    :root {
+      --bg: #f6f5f0;
+      --surface: #ffffff;
+      --fg: #1a2e1a;
+      --muted: #6b7b6b;
+      --border: #e0ded8;
+      --accent: #2d6a4f;
+      --accent-light: #40916c;
+      --accent-dark: #1b4332;
+      --warm: #d97706;
+      --waterfall: #0e7490;
+      --cave: #78716c;
+      --spirit: #9f1239;
+      --radius: 14px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+      --shadow-lg: 0 4px 12px rgba(0,0,0,0.08), 0 16px 40px rgba(0,0,0,0.06);
+      --font: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--font); color: var(--fg); background: var(--bg); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+    img { max-width: 100%; display: block; }
+    a { color: inherit; text-decoration: none; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+    /* NAV */
+    .navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 100; transition: all 0.35s ease; padding: 16px 0; }
+    .navbar.scrolled { background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 1px 0 var(--border); padding: 10px 0; }
+    .nav-inner { display: flex; align-items: center; justify-content: space-between; max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+    .nav-logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: #fff; transition: color 0.35s; }
+    .navbar.scrolled .nav-logo { color: var(--fg); }
+    .nav-logo img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+    .nav-links { display: flex; align-items: center; gap: 28px; }
+    .nav-links a { font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.85); transition: color 0.35s; }
+    .nav-links a:hover, .nav-links a.active { color: #fff; }
+    .navbar.scrolled .nav-links a { color: var(--muted); }
+    .navbar.scrolled .nav-links a:hover, .navbar.scrolled .nav-links a.active { color: var(--accent); }
+    .lang-select { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); color: #fff; padding: 6px 12px; border-radius: 8px; font-family: var(--font); font-size: 13px; cursor: pointer; transition: all 0.35s; }
+    .navbar.scrolled .lang-select { background: var(--surface); border-color: var(--border); color: var(--fg); }
+    .mobile-toggle { display: none; background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 4px; }
+    .navbar.scrolled .mobile-toggle { color: var(--fg); }
+
+    /* HERO */
+    .hero { position: relative; min-height: 60vh; display: flex; align-items: center; justify-content: center; text-align: center; overflow: hidden; background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 40%, #40916c 70%, #52b788 100%); }
+    .hero::before { content: ''; position: absolute; inset: 0; background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E"); }
+    .hero::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 200px; background: linear-gradient(to top, var(--bg), transparent); }
+    .hero-content { position: relative; z-index: 2; padding: 0 24px; max-width: 800px; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); padding: 8px 18px; border-radius: 100px; font-size: 13px; color: rgba(255,255,255,0.9); margin-bottom: 28px; backdrop-filter: blur(4px); }
+    .hero h1 { font-family: var(--font-display); font-size: clamp(36px, 6vw, 64px); font-weight: 800; color: #fff; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 20px; }
+    .hero p { font-size: clamp(16px, 2.5vw, 20px); color: rgba(255,255,255,0.8); max-width: 600px; margin: 0 auto; line-height: 1.7; }
+
+    /* SECTION */
+    .section { padding: 100px 0; }
+    .section-header { text-align: center; margin-bottom: 56px; }
+    .section-header .kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+    .section-header h2 { font-size: clamp(28px, 4vw, 42px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.2; }
+    .section-header p { color: var(--muted); max-width: 560px; margin: 14px auto 0; font-size: 16px; }
+
+    /* COMMUNE CARDS */
+    .communes-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .commune-card { background: var(--surface); border-radius: var(--radius); padding: 32px; border: 1px solid var(--border); transition: all 0.3s; position: relative; overflow: hidden; }
+    .commune-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+    .commune-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; }
+    .commune-card.c-tomoa::before { background: var(--accent); }
+    .commune-card.c-chiengkhoa::before { background: var(--waterfall); }
+    .commune-card.c-suoibang::before { background: var(--warm); }
+    .commune-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 16px; }
+    .c-tomoa .commune-icon { background: rgba(45,106,79,0.1); color: var(--accent); }
+    .c-chiengkhoa .commune-icon { background: rgba(14,116,144,0.1); color: var(--waterfall); }
+    .c-suoibang .commune-icon { background: rgba(217,119,6,0.1); color: var(--warm); }
+    .commune-code { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+    .commune-card h3 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    .commune-card p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* MERGER DIAGRAM */
+    .merger-section { background: var(--accent-dark); color: #fff; padding: 80px 0; }
+    .merger-diagram { display: flex; align-items: center; justify-content: center; gap: 20px; flex-wrap: wrap; margin-top: 48px; }
+    .merger-node { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: var(--radius); padding: 24px 28px; text-align: center; min-width: 160px; backdrop-filter: blur(4px); transition: all 0.3s; }
+    .merger-node:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); }
+    .merger-node .node-icon { font-size: 28px; margin-bottom: 8px; display: block; }
+    .merger-node .node-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .merger-node .node-code { font-size: 11px; opacity: 0.5; letter-spacing: 0.08em; text-transform: uppercase; }
+    .merger-arrow { font-size: 28px; opacity: 0.5; font-weight: 300; }
+    .merger-plus { font-size: 24px; font-weight: 300; opacity: 0.4; }
+    .merger-result { background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.3); border-radius: var(--radius); padding: 32px 36px; text-align: center; min-width: 220px; }
+    .merger-result .node-icon { font-size: 32px; margin-bottom: 8px; display: block; }
+    .merger-result .node-name { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .merger-result .node-stats { font-size: 14px; opacity: 0.7; line-height: 1.8; }
+
+    /* STATS */
+    .stats-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; margin-top: 56px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.12); }
+    .stat-item { text-align: center; }
+    .stat-number { font-size: clamp(32px, 4vw, 48px); font-weight: 800; letter-spacing: -0.03em; line-height: 1; display: block; }
+    .stat-unit { font-size: 16px; font-weight: 300; opacity: 0.6; }
+    .stat-label { font-size: 13px; opacity: 0.5; margin-top: 8px; display: block; letter-spacing: 0.06em; text-transform: uppercase; }
+
+    /* TIMELINE */
+    .timeline { max-width: 700px; margin: 0 auto; position: relative; }
+    .timeline::before { content: ''; position: absolute; left: 24px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+    .timeline-item { display: flex; gap: 24px; margin-bottom: 40px; position: relative; }
+    .timeline-dot { width: 50px; height: 50px; border-radius: 50%; background: var(--surface); border: 2px solid var(--accent); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; z-index: 1; }
+    .timeline-content { padding-top: 8px; }
+    .timeline-content h3 { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .timeline-content p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+    .timeline-content .year { font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: 0.08em; margin-bottom: 4px; display: block; }
+
+    /* MAP SECTION */
+    .map-section { background: var(--accent-dark); padding: 80px 0; }
+    .map-wrapper { border-radius: var(--radius); overflow: hidden; border: 1px solid rgba(255,255,255,0.15); height: 420px; margin-top: 32px; }
+    #about-map { width: 100%; height: 100%; }
+
+    /* CONTACT */
+    .contact-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .contact-card { background: var(--surface); border-radius: var(--radius); padding: 28px; border: 1px solid var(--border); display: flex; gap: 16px; align-items: flex-start; }
+    .contact-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(45,106,79,0.08); color: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .contact-icon svg { width: 20px; height: 20px; }
+    .contact-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .contact-card p { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+    /* FOOTER */
+    footer { background: var(--accent-dark); color: #fff; padding: 60px 0 30px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 40px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .footer-brand h3 { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+    .footer-brand p { font-size: 14px; opacity: 0.6; line-height: 1.7; }
+    .footer-col h4 { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.5; margin-bottom: 16px; }
+    .footer-col a { display: block; font-size: 14px; opacity: 0.7; margin-bottom: 10px; transition: opacity 0.2s; }
+    .footer-col a:hover { opacity: 1; }
+    .footer-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 24px; font-size: 13px; opacity: 0.4; }
+
+    /* RESPONSIVE */
+    @media (max-width: 1024px) {
+      .communes-grid { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 768px) {
+      .hero { min-height: 50vh; }
+      .nav-links { display: none; position: absolute; top: 100%; left: 0; right: 0; background: rgba(255,255,255,0.97); backdrop-filter: blur(12px); flex-direction: column; padding: 20px; gap: 0; box-shadow: var(--shadow-lg); }
+      .nav-links.open { display: flex; }
+      .nav-links a { color: var(--fg); padding: 12px 0; border-bottom: 1px solid var(--border); width: 100%; }
+      .nav-links a:last-child { border: none; }
+      .mobile-toggle { display: block; }
+      .section { padding: 60px 0; }
+      .merger-diagram { flex-direction: column; gap: 12px; }
+      .merger-arrow { transform: rotate(90deg); }
+      .stats-strip { grid-template-columns: 1fr; gap: 24px; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr; gap: 28px; }
+      .footer-bottom { flex-direction: column; gap: 8px; text-align: center; }
+      .timeline::before { left: 20px; }
+      .timeline-dot { width: 42px; height: 42px; font-size: 16px; }
+    }
+    @media (max-width: 480px) {
+      .hero h1 { font-size: 32px; }
+      .merger-node, .merger-result { min-width: 140px; padding: 18px 20px; }
+    }
+  </style>
+  <link rel="stylesheet" crossorigin href="/assets/leaflet-CHtNrtow.css">
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-inner">
+      <a href="index.html" class="nav-logo">
+        <img src="/assets/mqr19fer-logo-to_-mu_a-CGn1zHaQ.jpg" alt="Logo Xã Tô Múa">
+        <span data-i18n="nav.brand">Tô Múa</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="index.html" data-i18n="nav.home">Trang chủ</a>
+        <a href="map.html" data-i18n="nav.map">Bản đồ</a>
+        <a href="index.html#destinations" data-i18n="nav.destinations">Điểm đến</a>
+        <a href="about.html" class="active" data-i18n="nav.about">Giới thiệu</a>
+        <a href="admin.html" data-i18n="nav.admin">Quản trị</a>
+      </div>
+      <select class="lang-select" id="langSelect">
+        <option value="vi">🇻🇳 Tiếng Việt</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="ko">🇰🇷 한국어</option>
+        <option value="ru">🇷🇺 Русский</option>
+        <option value="th">🇹🇭 ภาษาไทย</option>
+        <option value="zh">🇨🇳 中文</option>
+        <option value="id">🇮🇩 Bahasa Indonesia</option>
+        <option value="ms">🇲🇾 Bahasa Melayu</option>
+        <option value="lo">🇱🇦 ລາວ</option>
+        <option value="es">🇪🇸 Español</option>
+        <option value="fr">🇫🇷 Français</option>
+        <option value="de">🇩🇪 Deutsch</option>
+      </select>
+      <button class="mobile-toggle" id="mobileToggle">☰</button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-content">
+      <div class="hero-badge" data-i18n="about.hero.badge">🏔️ Tỉnh Sơn La — Việt Nam</div>
+      <h1 data-i18n="about.hero.title">Giới thiệu<br>Xã Tô Múa</h1>
+      <p data-i18n="about.hero.subtitle">Từ ba xã Tô Múa, Chiềng Khoa và Suối Bàng — một vùng đất mới mang đậm bản sắc văn hóa Tây Bắc.</p>
+    </div>
+  </section>
+
+  <!-- MERGER HISTORY -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <div class="kicker" data-i18n="merge.kicker">Lịch sử sáp nhập</div>
+        <h2 data-i18n="merge.title">Từ 3 xã thành 1</h2>
+        <p data-i18n="merge.subtitle">Năm 2025, ba xã Tô Múa, Chiềng Khoa và Suối Bàng chính thức sáp nhập thành xã Tô Múa mới — giữ gìn bản sắc, hướng tới tương lai.</p>
+      </div>
+
+      <div class="communes-grid">
+        <div class="commune-card c-tomoa">
+          <div class="commune-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          </div>
+          <div class="commune-code" data-i18n="merge.1.code">Mã: 04018</div>
+          <h3 data-i18n="merge.1.name">Tô Múa</h3>
+          <p data-i18n="merge.1.desc">Trung tâm hành chính mới. Nổi tiếng với Thác Nàng Tiên và cảnh quan núi rừng hùng vĩ.</p>
+        </div>
+        <div class="commune-card c-chiengkhoa">
+          <div class="commune-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div class="commune-code" data-i18n="merge.2.code">Mã: 04036</div>
+          <h3 data-i18n="merge.2.name">Chiềng Khoa</h3>
+          <p data-i18n="merge.2.desc">Vùng đất hang động và di tích lịch sử — nơi lưu giữ dấu tích văn hóa Mường cổ.</p>
+        </div>
+        <div class="commune-card c-suoibang">
+          <div class="commune-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          </div>
+          <div class="commune-code" data-i18n="merge.3.code">Mã: 03994</div>
+          <h3 data-i18n="merge.3.name">Suối Bàng</h3>
+          <p data-i18n="merge.3.desc">Vùng cao nguyên với Hang mộ Tạng Mè — di tích khảo cổ quý giá của người Thái cổ.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MERGER DIAGRAM -->
+  <section class="merger-section">
+    <div class="container" style="text-align:center;">
+      <div class="section-header" style="margin-bottom:0;">
+        <div class="kicker" style="color:rgba(255,255,255,0.5);" data-i18n="diagram.kicker">Sáp nhập</div>
+        <h2 style="color:#fff;" data-i18n="diagram.title">Ba xã — Một tương lai</h2>
+      </div>
+
+      <div class="merger-diagram">
+        <div class="merger-node">
+          <span class="node-icon">🟢</span>
+          <div class="node-name" data-i18n="merge.1.name">Tô Múa</div>
+          <div class="node-code" data-i18n="merge.1.code">Mã: 04018</div>
+        </div>
+        <span class="merger-plus">+</span>
+        <div class="merger-node">
+          <span class="node-icon">🔵</span>
+          <div class="node-name" data-i18n="merge.2.name">Chiềng Khoa</div>
+          <div class="node-code" data-i18n="merge.2.code">Mã: 04036</div>
+        </div>
+        <span class="merger-plus">+</span>
+        <div class="merger-node">
+          <span class="node-icon">🟠</span>
+          <div class="node-name" data-i18n="merge.3.name">Suối Bàng</div>
+          <div class="node-code" data-i18n="merge.3.code">Mã: 03994</div>
+        </div>
+        <span class="merger-arrow">→</span>
+        <div class="merger-result">
+          <span class="node-icon">🏛️</span>
+          <div class="node-name" data-i18n="diagram.result.name">Tô Múa (mới)</div>
+          <div class="node-stats" data-i18n="diagram.result.stats">181,98 km² · 14.701 nhân khẩu</div>
+        </div>
+      </div>
+
+      <div class="stats-strip">
+        <div class="stat-item">
+          <span class="stat-number"><span data-i18n="stats.area.val">181,98</span> <span class="stat-unit" data-i18n="stats.area.unit">km²</span></span>
+          <span class="stat-label" data-i18n="stats.area">Diện tích tự nhiên</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" data-i18n="stats.pop.val">14.701</span>
+          <span class="stat-label" data-i18n="stats.population">Nhân khẩu</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number"><span data-i18n="stats.merge.val1">3</span> <span class="stat-unit" data-i18n="stats.merge.val2">→ 1</span></span>
+          <span class="stat-label" data-i18n="stats.merged">Xã cũ sáp nhập</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MAP -->
+  <section class="map-section">
+    <div class="container">
+      <div class="section-header" style="margin-bottom:0;">
+        <div class="kicker" style="color:rgba(255,255,255,0.5);" data-i18n="map.kicker">Bản đồ</div>
+        <h2 style="color:#fff;" data-i18n="map.title">Ranh giới hành chính</h2>
+        <p style="color:rgba(255,255,255,0.6);" data-i18n="map.subtitle">Xem ranh giới 3 xã cũ và xã Tô Múa sau sáp nhập trên bản đồ.</p>
+      </div>
+      <div class="map-wrapper">
+        <div id="about-map"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="section">
+    <div class="container">
+      <div class="section-header">
+        <div class="kicker" data-i18n="contact.kicker">Liên hệ</div>
+        <h2 data-i18n="contact.title">Thông tin liên hệ</h2>
+      </div>
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div>
+            <h4 data-i18n="contact.ubnd.title">Ủy ban nhân dân xã Tô Múa</h4>
+            <p data-i18n="contact.ubnd.desc">Trụ sở UBND xã Tô Múa, tỉnh Sơn La</p>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          </div>
+          <div>
+            <h4 data-i18n="contact.phone.title">Điện thoại</h4>
+            <p data-i18n="contact.phone.desc">Liên hệ UBND xã Tô Múa</p>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+          </div>
+          <div>
+            <h4 data-i18n="contact.province.title">Tỉnh Sơn La</h4>
+            <p data-i18n="contact.province.desc">Tỉnh Sơn La, Việt Nam</p>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div>
+            <h4 data-i18n="contact.digital.title">Bản đồ số</h4>
+            <p data-i18n="contact.digital.desc">Hệ thống quản lý bản đồ du lịch số xã Tô Múa</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <h3>🏛️ <span data-i18n="footer.brand">Xã Tô Múa</span></h3>
+          <p data-i18n="footer.desc">Bản đồ số du lịch xã Tô Múa, tỉnh Sơn La. Dự án phục vụ phát triển du lịch cộng đồng và giới thiệu bản sắc văn hóa vùng cao.</p>
+        </div>
+        <div class="footer-col">
+          <h4 data-i18n="footer.nav">Điều hướng</h4>
+          <a href="index.html" data-i18n="nav.home">Trang chủ</a>
+          <a href="map.html" data-i18n="nav.map">Bản đồ</a>
+          <a href="about.html" data-i18n="nav.about">Giới thiệu</a>
+        </div>
+        <div class="footer-col">
+          <h4 data-i18n="footer.services">Dịch vụ</h4>
+          <a href="#" data-i18n="footer.homestay">Lưu trú</a>
+          <a href="#" data-i18n="footer.food">Ẩm thực</a>
+          <a href="#" data-i18n="footer.tour">Tour gợi ý</a>
+        </div>
+        <div class="footer-col">
+          <h4 data-i18n="footer.contact">Liên hệ</h4>
+          <a href="#" data-i18n="footer.ubnd">UBND xã Tô Múa</a>
+          <a href="#" data-i18n="footer.province">Tỉnh Sơn La</a>
+          <a href="admin.html" data-i18n="nav.admin">Quản trị hệ thống</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span data-i18n="footer.copyright">© 2026 Xã Tô Múa — Tỉnh Sơn La</span>
+        <span data-i18n="footer.powered">Xây dựng bằng công nghệ bản đồ số</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="lib/leaflet.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/i18n-new.js"></script>
+  <script>
+    // === NAVBAR SCROLL ===
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 60);
+    }, { passive: true });
+
+    // === MOBILE MENU ===
+    document.getElementById('mobileToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('open');
+    });
+
+    // === MAP ===
+    const map = L.map('about-map', { zoomControl: true, attributionControl: false }).setView(TomuaConfig.mapCenter, 11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
+
+    const geoFiles = [
+      TomuaConfig.geoFiles[0],
+      TomuaConfig.geoFiles[1],
+      TomuaConfig.geoFiles[2]
+    ];
+
+    geoFiles.forEach(({ file, name, color }) => {
+      fetch(file).then(r => r.json()).then(data => {
+        L.geoJSON(data, {
+          style: { color: color, weight: 2.5, opacity: 0.8, fillColor: color, fillOpacity: 0.1, dashArray: '6 4' }
+        }).bindTooltip(name, { permanent: false, direction: 'center' }).addTo(map);
+      }).catch(() => {});
+    });
+
+    // Merged boundary
+    fetch('Tô Múa (phường xã) - 34.geojson').then(r => r.json()).then(data => {
+      L.geoJSON(data, {
+        style: { color: '#1b4332', weight: 3, opacity: 1, fillColor: '#1b4332', fillOpacity: 0.04 }
+      }).addTo(map);
+    }).catch(() => {});
+
+    setTimeout(() => map.invalidateSize(), 200);
+
+    // === I18N ===
+    document.addEventListener('DOMContentLoaded', async () => {
+      await I18nNew.init('about');
+      
+      // Listen for language changes
+      document.addEventListener('i18n-changed', () => {
+        // Re-apply translations to all data-i18n elements
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+          const key = el.getAttribute('data-i18n');
+          const translation = I18nNew.get(key);
+          if (translation && translation !== key) {
+            el.textContent = translation;
+          }
+        });
+        
+        // Update page title
+        document.title = I18nNew.get('about.hero.title', 'Giới thiệu') + ' — Xã Tô Múa';
+      });
+    });
+  </script>
+</body>
+</html>

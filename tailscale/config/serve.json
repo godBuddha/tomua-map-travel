@@ -1,0 +1,16 @@
+{
+  "TCP": {
+    "443": {
+      "HTTPS": true
+    }
+  },
+  "Web": {
+    "tomua-web.tail3f8970.ts.net:443": {
+      "Handlers": {
+        "/": {
+          "Proxy": "http://nginx:80"
+        }
+      }
+    }
+  }
+}

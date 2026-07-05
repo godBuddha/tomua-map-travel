@@ -18,8 +18,19 @@ const User = require('../../src/models/user.model');
 const db = require('../../src/config/database');
 
 describe('AuthService', () => {
+  let mockDbChain;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    mockDbChain = {
+      where: jest.fn().mockReturnThis(),
+      update: jest.fn().mockResolvedValue(1),
+      insert: jest.fn().mockReturnThis(),
+      returning: jest.fn().mockResolvedValue([{}]),
+      del: jest.fn().mockResolvedValue(1),
+      first: jest.fn().mockResolvedValue(null)
+    };
+    db.mockImplementation(() => mockDbChain);
   });
 
   describe('generateTokens', () => {
@@ -70,10 +81,6 @@ describe('AuthService', () => {
       User.comparePassword.mockResolvedValue(true);
       User.updateLastLogin.mockResolvedValue(true);
       User.setOnline.mockResolvedValue(true);
-      db.mockReturnValue({
-        insert: jest.fn().mockReturnThis(),
-        returning: jest.fn().mockResolvedValue([{}])
-      });
 
       const result = await AuthService.login('admin', 'password123');
 
@@ -113,6 +120,7 @@ describe('AuthService', () => {
       };
 
       User.findByUsername.mockResolvedValue(mockUser);
+      User.findById.mockResolvedValue(mockUser);
       User.comparePassword.mockResolvedValue(false);
 
       await expect(AuthService.login('admin', 'wrong'))
@@ -148,11 +156,8 @@ describe('AuthService', () => {
       };
 
       User.findByUsername.mockResolvedValue(mockUser);
+      User.findById.mockResolvedValue(mockUser);
       User.comparePassword.mockResolvedValue(false);
-      db.mockReturnValue({
-        where: jest.fn().mockReturnThis(),
-        update: jest.fn().mockResolvedValue(1)
-      });
 
       await expect(AuthService.login('admin', 'wrong'))
         .rejects.toThrow('Invalid credentials');
