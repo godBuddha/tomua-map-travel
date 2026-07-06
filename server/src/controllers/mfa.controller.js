@@ -87,7 +87,7 @@ const MFAController = {
       }
 
       // Generate tokens after successful MFA verification
-      const AuthService = require('./auth.service');
+      const AuthService = require('../services/auth.service');
       const tokens = AuthService.generateTokens(user);
       await AuthService.storeRefreshToken(user.id, tokens.refreshToken);
       await require('../models/user.model').updateLastLogin(user.id);

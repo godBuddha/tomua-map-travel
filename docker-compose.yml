@@ -46,6 +46,7 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000,https://localhost:3443,https://*.ts.net,https://tomua-web.tail3f8970.ts.net}
       UPLOAD_DIR: /app/uploads
       REDIS_URL: redis://redis:6379
+      LIBRETRANSLATE_URL: http://libretranslate:5000
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123456}
       CTV_PASSWORD: ${CTV_PASSWORD:-ctv123456}
     volumes:
@@ -56,6 +57,29 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      libretranslate:
+        condition: service_started
+    restart: unless-stopped
+
+  libretranslate:
+    image: libretranslate/libretranslate:latest
+    container_name: tomua_libretranslate
+    environment:
+      - LT_LOAD_ONLY=vi,en,ko,ru,th,zh,id,ms,es,fr,de
+      - LT_DISABLE_METRICS=true
+      - LT_API_KEYS=false
+      - LT_FRONTEND_LANGUAGE_SOURCE=vi
+      - LT_FRONTEND_LANGUAGE_TARGET=en
+      - LT_HOST=0.0.0.0
+      - LT_PORT=5000
+    volumes:
+      - libretranslate_data:/root/.local/share
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/languages"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 300s
     restart: unless-stopped
 
   nginx:
@@ -98,3 +122,4 @@ volumes:
   uploads_data:
   redis_data:
   tailscale_data:
+  libretranslate_data:

@@ -91,6 +91,19 @@ const RouteController = {
 
       const route = await Route.create(data);
 
+      // Auto-translate in background
+      const { enqueueTranslation } = require('../services/translation-queue.service');
+      const fieldsToTranslate = {};
+      if (data.name && typeof data.name === 'object' && data.name.vi) {
+        fieldsToTranslate.name = data.name.vi;
+      }
+      if (data.description && typeof data.description === 'object' && data.description.vi) {
+        fieldsToTranslate.description = data.description.vi;
+      }
+      if (Object.keys(fieldsToTranslate).length > 0) {
+        enqueueTranslation('routes', route.id, fieldsToTranslate).catch(() => {});
+      }
+
       // If stops are provided, batch insert them
       if (stops && Array.isArray(stops) && stops.length > 0) {
         const stopsData = stops.map((stop, i) => ({
@@ -154,6 +167,19 @@ const RouteController = {
       }
       
       const updated = await Route.update(id, routeData);
+
+      // Auto-translate in background if name/description changed
+      const { enqueueTranslation } = require('../services/translation-queue.service');
+      const fieldsToTranslate = {};
+      if (routeData.name && typeof routeData.name === 'object' && routeData.name.vi) {
+        fieldsToTranslate.name = routeData.name.vi;
+      }
+      if (routeData.description && typeof routeData.description === 'object' && routeData.description.vi) {
+        fieldsToTranslate.description = routeData.description.vi;
+      }
+      if (Object.keys(fieldsToTranslate).length > 0) {
+        enqueueTranslation('routes', id, fieldsToTranslate).catch(() => {});
+      }
 
       // If stops are provided, update them
       if (stops && Array.isArray(stops)) {

@@ -32,10 +32,11 @@ const MFAService = {
     return { secret, otpauthUrl, backupCodes };
   },
 
-  // Verify TOTP token
+  // Verify TOTP token (synchronous)
   verifyToken(secret, token) {
     try {
-      return otplib.verify({ token, secret });
+      const result = otplib.verifySync({ token, secret });
+      return result && result.valid === true;
     } catch (error) {
       return false;
     }
@@ -88,7 +89,11 @@ const MFAService = {
       return false;
     }
 
-    const backupCodes = JSON.parse(user.mfa_backup_codes);
+    // Handle both JSONB (object) and TEXT (string) storage
+    const backupCodes = typeof user.mfa_backup_codes === 'string' 
+      ? JSON.parse(user.mfa_backup_codes) 
+      : user.mfa_backup_codes;
+    
     const codeEntry = backupCodes.find(bc => bc.code === code.toUpperCase() && !bc.used);
 
     if (!codeEntry) {

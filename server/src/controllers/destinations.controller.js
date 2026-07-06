@@ -112,6 +112,23 @@ const DestinationController = {
       };
 
       const destination = await Destination.create(data);
+
+      // Auto-translate in background
+      const { enqueueTranslation } = require('../services/translation-queue.service');
+      const fieldsToTranslate = {};
+      if (data.name && typeof data.name === 'object' && data.name.vi) {
+        fieldsToTranslate.name = data.name.vi;
+      }
+      if (data.description && typeof data.description === 'object' && data.description.vi) {
+        fieldsToTranslate.description = data.description.vi;
+      }
+      if (data.quote && typeof data.quote === 'object' && data.quote.vi) {
+        fieldsToTranslate.quote = data.quote.vi;
+      }
+      if (Object.keys(fieldsToTranslate).length > 0) {
+        enqueueTranslation('destinations', destination.id, fieldsToTranslate).catch(() => {});
+      }
+
       return created(res, destination);
     } catch (error) {
       next(error);
@@ -158,6 +175,22 @@ const DestinationController = {
       }
 
       const updated = await Destination.update(id, data);
+
+      // Auto-translate in background if name/description/quote changed
+      const { enqueueTranslation } = require('../services/translation-queue.service');
+      const fieldsToTranslate = {};
+      if (data.name && typeof data.name === 'object' && data.name.vi) {
+        fieldsToTranslate.name = data.name.vi;
+      }
+      if (data.description && typeof data.description === 'object' && data.description.vi) {
+        fieldsToTranslate.description = data.description.vi;
+      }
+      if (data.quote && typeof data.quote === 'object' && data.quote.vi) {
+        fieldsToTranslate.quote = data.quote.vi;
+      }
+      if (Object.keys(fieldsToTranslate).length > 0) {
+        enqueueTranslation('destinations', id, fieldsToTranslate).catch(() => {});
+      }
       
       // Invalidate cache
       await CacheService.del(`destination:${id}`);

@@ -4,6 +4,8 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
+const { RedisStore } = require('rate-limit-redis');
+const { createClient } = require('redis');
 const path = require('path');
 const swaggerUi = require('swagger-ui-express');
 const logger = require('./utils/logger');
@@ -16,6 +18,43 @@ const app = express();
 
 // Trust proxy for rate limiting behind nginx
 app.set('trust proxy', 1);
+
+// Redis client for rate limiting
+let redisClient = null;
+let rateLimitStore = null;
+
+const initRedisForRateLimit = async () => {
+  try {
+    redisClient = createClient({
+      url: process.env.REDIS_URL || 'redis://redis:6379',
+      socket: {
+        reconnectStrategy: (retries) => {
+          if (retries > 5) return new Error('Redis rate limit: too many retries');
+          return Math.min(retries * 100, 2000);
+        }
+      }
+    });
+    
+    redisClient.on('error', (err) => {
+      logger.warn(`Redis rate-limit client error: ${err.message}`);
+    });
+    
+    await redisClient.connect();
+    logger.info('Redis connected for rate limiting');
+    
+    rateLimitStore = new RedisStore({
+      sendCommand: (...args) => redisClient.sendCommand(args),
+    });
+    
+    return true;
+  } catch (error) {
+    logger.warn(`Redis rate-limit store unavailable, using memory store: ${error.message}`);
+    return false;
+  }
+};
+
+// Initialize Redis for rate limiting (non-blocking)
+initRedisForRateLimit().catch(() => {});
 
 // Compression middleware
 app.use(compression({
@@ -68,15 +107,18 @@ app.get('/api/health', (req, res) => {
 });
 
 // Rate limiting (applied after health check)
-const limiter = rateLimit({
+const limiterConfig = {
   windowMs: 1 * 60 * 1000, // 1 minute
-  max: 1000, // limit each IP to 1000 requests per minute (development)
+  max: 1000, // limit each IP to 1000 requests per minute
   message: {
     success: false,
     message: 'Too many requests, please try again later.'
   },
-  validate: { trustProxy: true }
-});
+  validate: { trustProxy: true },
+  // Use Redis store if available, otherwise memory store
+  ...(rateLimitStore && { store: rateLimitStore })
+};
+const limiter = rateLimit(limiterConfig);
 app.use('/api/', limiter);
 
 // Stricter rate limit for auth endpoints
@@ -87,7 +129,9 @@ const authLimiter = rateLimit({
     success: false,
     message: 'Too many login attempts, please try again later.'
   },
-  validate: { trustProxy: true }
+  validate: { trustProxy: true },
+  // Use Redis store if available
+  ...(rateLimitStore && { store: rateLimitStore })
 });
 app.use('/api/auth/login', authLimiter);
 

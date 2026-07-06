@@ -24,7 +24,11 @@ async function loadDestination() {
   try {
     const response = await fetch(`/api/destinations/${slug}`);
     const data = await response.json();
-    if (!data.success) { console.error('Destination not found'); return; }
+    if (!data.success) {
+      console.error('Destination not found');
+      document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column"><h1>404</h1><p>Không tìm thấy điểm đến</p><a href="/">Về trang chủ</a></div>';
+      return;
+    }
 
     window.dest = data.data;
     const lat = window.dest.lat || 0;
@@ -72,7 +76,10 @@ async function loadDestination() {
     setTimeout(() => detailMap.invalidateSize(), 300);
     loadNearby(lat, lng, lang);
     loadComments();
-  } catch (error) { console.error('Error loading destination:', error); }
+  } catch (error) {
+    console.error('Error loading destination:', error);
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;flex-direction:column"><h1>Lỗi</h1><p>Không thể tải dữ liệu. Vui lòng thử lại sau.</p><a href="/">Về trang chủ</a></div>';
+  }
 }
 
 // === POPULATE ===
@@ -88,7 +95,14 @@ function populateDest() {
   document.getElementById('heroKicker').textContent = ((typeof I18nNew !== 'undefined') ? I18nNew.get('kicker.' + window.dest.type) : typeKickers[window.dest.type] || '') + ' ' + window.dest.region;
   document.getElementById('detailRegion').textContent = ((typeof I18nNew !== 'undefined') ? I18nNew.get('region') : 'Khu vực') + ': ' + window.dest.region;
   document.getElementById('detailDesc').textContent = desc;
-  document.getElementById('pullQuote').textContent = '"' + quoteStr + '"';
+  // Hide pull-quote section when no quote data
+  const pullQuoteSection = document.getElementById('pullQuote')?.closest('.pull-quote-block') || document.getElementById('pullQuote')?.parentElement;
+  if (quoteStr) {
+    document.getElementById('pullQuote').textContent = '"' + quoteStr + '"';
+    if (pullQuoteSection) pullQuoteSection.style.display = '';
+  } else {
+    if (pullQuoteSection) pullQuoteSection.style.display = 'none';
+  }
 
   const detailDescMore = document.getElementById('detailDescMore');
   if (detailDescMore) detailDescMore.style.display = 'none';
@@ -101,34 +115,50 @@ function populateDest() {
 
   // Stats
   const stats = window.dest.stats?.[lang] || window.dest.stats?.vi || window.dest.stats?.en;
+  const statsStrip = document.getElementById('statsStrip');
+  const statsSection = statsStrip?.closest('section') || statsStrip?.parentElement;
   if (stats && typeof stats === 'object' && Object.keys(stats).length > 0) {
-    document.getElementById('statsStrip').innerHTML = Object.entries(stats).map(([key, value]) =>
+    statsStrip.innerHTML = Object.entries(stats).map(([key, value]) =>
       `<div class="stat-cell"><div class="stat-value">${value}</div><div class="stat-label">${key}</div></div>`
     ).join('');
+    if (statsSection) statsSection.style.display = '';
   } else if (typeof I18nNew !== 'undefined') {
     const statsStr = I18nNew.get('d' + window.dest.id + '.stats');
     if (statsStr) {
-      document.getElementById('statsStrip').innerHTML = statsStr.split('|').map(s => {
+      statsStrip.innerHTML = statsStr.split('|').map(s => {
         const [l, v] = s.split(',');
         return `<div class="stat-cell"><div class="stat-value">${v}</div><div class="stat-label">${l}</div></div>`;
       }).join('');
+      if (statsSection) statsSection.style.display = '';
+    } else {
+      if (statsSection) statsSection.style.display = 'none';
     }
+  } else {
+    if (statsSection) statsSection.style.display = 'none';
   }
 
   // Info table
   const info = window.dest.info?.[lang] || window.dest.info?.vi || window.dest.info?.en;
+  const infoTable = document.getElementById('infoTable');
+  const infoSection = infoTable?.closest('section') || infoTable?.parentElement;
   if (info && typeof info === 'object' && Object.keys(info).length > 0) {
-    document.getElementById('infoTable').innerHTML = Object.entries(info).map(([label, value]) =>
+    infoTable.innerHTML = Object.entries(info).map(([label, value]) =>
       `<tr><td class="info-label">${label}</td><td class="info-value">${value}</td></tr>`
     ).join('');
+    if (infoSection) infoSection.style.display = '';
   } else if (typeof I18nNew !== 'undefined') {
     const infoStr = I18nNew.get('d' + window.dest.id + '.info');
     if (infoStr) {
-      document.getElementById('infoTable').innerHTML = infoStr.split('|').map(s => {
+      infoTable.innerHTML = infoStr.split('|').map(s => {
         const [l, v] = s.split(',');
         return `<tr><td class="info-label">${l}</td><td class="info-value">${v}</td></tr>`;
       }).join('');
+      if (infoSection) infoSection.style.display = '';
+    } else {
+      if (infoSection) infoSection.style.display = 'none';
     }
+  } else {
+    if (infoSection) infoSection.style.display = 'none';
   }
 
   // Visitor Notes

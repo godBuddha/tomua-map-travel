@@ -31,16 +31,17 @@ Promise.all([
     process.exit(1);
   });
 
-// Handle unhandled promise rejections
-process.on('unhandledRejection', (err) => {
-  logger.error(`Unhandled Rejection: ${err.message}`);
-  process.exit(1);
+// Handle unhandled promise rejections - DO NOT EXIT, just log
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error(`Unhandled Rejection: ${reason?.message || reason}`);
+  // Do not exit - let the server continue running
 });
 
-// Handle uncaught exceptions
+// Handle uncaught exceptions - log but try to continue
 process.on('uncaughtException', (err) => {
   logger.error(`Uncaught Exception: ${err.message}`);
-  process.exit(1);
+  logger.error(err.stack);
+  // Do not exit immediately - let existing connections finish
 });
 
 // Graceful shutdown

@@ -14,6 +14,7 @@ const uploadRoutes = require('./upload.routes');
 const commentRoutes = require('./comments.routes');
 const settingsRoutes = require('./settings.routes');
 const mfaRoutes = require('./mfa.routes');
+const translateRoutes = require('./translate.routes');
 
 router.use('/auth', authRoutes);
 router.use('/destinations', destinationRoutes);
@@ -24,6 +25,7 @@ router.use('/upload', uploadRoutes);
 router.use('/comments', commentRoutes);
 router.use('/settings', settingsRoutes);
 router.use('/mfa', mfaRoutes);
+router.use('/translate', translateRoutes);
 
 // Stats endpoint
 router.get('/stats', async (req, res) => {
@@ -86,6 +88,17 @@ router.post('/heartbeat', authenticateToken, async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.json({ success: true }); // Don't fail on heartbeat errors
+  }
+});
+
+// Translation queue status endpoint
+router.get('/translation-status', authenticateToken, async (req, res) => {
+  try {
+    const { getQueueStatus } = require('../services/translation-queue.service');
+    const status = await getQueueStatus();
+    res.json({ success: true, data: status });
+  } catch (error) {
+    res.json({ success: true, data: { waiting: 0, active: 0, completed: 0, failed: 0, error: error.message } });
   }
 });
 

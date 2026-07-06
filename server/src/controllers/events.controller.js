@@ -104,6 +104,19 @@ const EventController = {
 
       const event = await Event.create(data);
 
+      // Auto-translate in background
+      const { enqueueTranslation } = require('../services/translation-queue.service');
+      const fieldsToTranslate = {};
+      if (data.name && typeof data.name === 'object' && data.name.vi) {
+        fieldsToTranslate.name = data.name.vi;
+      }
+      if (data.description && typeof data.description === 'object' && data.description.vi) {
+        fieldsToTranslate.description = data.description.vi;
+      }
+      if (Object.keys(fieldsToTranslate).length > 0) {
+        enqueueTranslation('events', event.id, fieldsToTranslate).catch(() => {});
+      }
+
       await CacheService.delPattern('events:*');
 
       return created(res, event);
@@ -150,6 +163,19 @@ const EventController = {
       }
 
       const updated = await Event.update(id, data);
+
+      // Auto-translate in background if name/description changed
+      const { enqueueTranslation } = require('../services/translation-queue.service');
+      const fieldsToTranslate = {};
+      if (data.name && typeof data.name === 'object' && data.name.vi) {
+        fieldsToTranslate.name = data.name.vi;
+      }
+      if (data.description && typeof data.description === 'object' && data.description.vi) {
+        fieldsToTranslate.description = data.description.vi;
+      }
+      if (Object.keys(fieldsToTranslate).length > 0) {
+        enqueueTranslation('events', id, fieldsToTranslate).catch(() => {});
+      }
 
       await CacheService.del(`event:${id}`);
       if (event.slug) await CacheService.del(`event:${event.slug}`);

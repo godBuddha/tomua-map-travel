@@ -37,13 +37,29 @@ function initMap() {
   if (typeof L === 'undefined') return;
   const center = (typeof TomuaConfig !== 'undefined' && TomuaConfig.mapCenter) ? TomuaConfig.mapCenter : [20.844, 104.825];
   map = L.map('map', { zoomControl: false }).setView(center, 12);
-  L.control.zoom({ position: 'bottomright' }).addTo(map);
+  L.control.zoom({ position: 'topright' }).addTo(map);
 
   osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18, attribution: '© OpenStreetMap' }).addTo(map);
   terrainLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '© OpenTopoMap' });
 
   boundaryGroup = L.layerGroup().addTo(map);
-  markerGroup = L.layerGroup().addTo(map);
+  markerGroup = L.markerClusterGroup({
+    maxClusterRadius: 50,
+    spiderfyOnMaxZoom: true,
+    showCoverageOnHover: false,
+    zoomToBoundsOnClick: true,
+    iconCreateFunction: function(cluster) {
+      const count = cluster.getChildCount();
+      let size = 'small';
+      if (count >= 10) size = 'medium';
+      if (count >= 20) size = 'large';
+      return L.divIcon({
+        html: '<div style="background:var(--accent,#2d6a4f);color:#fff;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.3);">' + count + '</div>',
+        className: 'marker-cluster marker-cluster-' + size,
+        iconSize: [40, 40]
+      });
+    }
+  }).addTo(map);
   routeGroup = L.layerGroup().addTo(map);
   eventGroup = L.layerGroup().addTo(map);
 

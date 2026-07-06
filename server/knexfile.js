@@ -49,9 +49,16 @@ module.exports = {
     client: 'pg',
     connection: process.env.DATABASE_URL,
     pool: {
-      min: 2,
-      max: 20
+      min: 5,
+      max: 50,
+      acquireTimeoutMillis: 30000,
+      createTimeoutMillis: 30000,
+      destroyTimeoutMillis: 5000,
+      idleTimeoutMillis: 30000,
+      reapIntervalMillis: 1000,
+      createRetryIntervalMillis: 200,
     },
+    acquireConnectionTimeout: 60000,
     migrations: {
       directory: './migrations',
       tableName: 'knex_migrations'

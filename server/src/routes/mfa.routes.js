@@ -3,7 +3,10 @@ const router = express.Router();
 const MFAController = require('../controllers/mfa.controller');
 const { authenticateToken } = require('../middleware/auth');
 
-// All MFA routes require authentication
+// Verify MFA token during login (NO auth required - called before login completes)
+router.post('/verify', MFAController.verify);
+
+// All other MFA routes require authentication
 router.use(authenticateToken);
 
 // Setup MFA - generate secret and QR code
@@ -14,9 +17,6 @@ router.post('/enable', MFAController.enable);
 
 // Disable MFA
 router.post('/disable', MFAController.disable);
-
-// Verify MFA token during login (used by frontend)
-router.post('/verify', MFAController.verify);
 
 // Get MFA status
 router.get('/status', MFAController.status);

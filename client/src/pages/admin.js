@@ -634,12 +634,11 @@
       
       if (!destId) {
         // Reset form for new destination
-        document.getElementById('destNameVi').value = '';
+        resetLangTabs();
         document.getElementById('destType').value = 'waterfall';
         document.getElementById('destRegion').value = 'Tô Múa';
         document.getElementById('destLat').value = '';
         document.getElementById('destLng').value = '';
-        document.getElementById('destDescVi').value = '';
         document.getElementById('destColor').value = '#0e7490';
         document.getElementById('destStatus').value = 'draft';
         document.getElementById('destStats').value = '';
@@ -713,18 +712,21 @@
     // === DESTINATION CRUD ===
     async function saveDestination() {
       const id = document.getElementById('destId').value;
-      const nameVi = document.getElementById('destNameVi').value.trim();
+      // Save current language before submitting
+      destNames[currentLang] = document.getElementById('destNameInput').value;
+      destDescs[currentLang] = document.getElementById('destDescInput').value;
+      
+      const nameVi = destNames['vi'] || '';
       const type = document.getElementById('destType').value;
       const region = document.getElementById('destRegion').value.trim();
       const lat = parseFloat(document.getElementById('destLat').value);
       const lng = parseFloat(document.getElementById('destLng').value);
-      const descVi = document.getElementById('destDescVi').value.trim();
       const color = document.getElementById('destColor').value;
       const status = document.getElementById('destStatus').value;
       const imageUrl = window.destImageUrl || null;
 
       if (!nameVi || !lat || !lng) {
-        alert(I18nNew.get('alert.fill_required', 'Vui lòng điền tên và chọn vị trí trên bản đồ'));
+        alert(I18nNew.get('alert.fill_required', 'Vui lòng điền tên tiếng Việt và chọn vị trí trên bản đồ'));
         return;
       }
 
@@ -773,12 +775,12 @@
       }
 
       const data = {
-        name: { vi: nameVi },
+        name: destNames,
         type,
         region,
         lat,
         lng,
-        description: { vi: descVi, en: descVi },
+        description: destDescs,
         color,
         status,
         image_url: imageUrl
@@ -839,13 +841,19 @@
           const lng = d.lng || 0;
           
           document.getElementById('destId').value = d.id;
-          document.getElementById('destNameVi').value = d.name.vi || '';
           document.getElementById('destType').value = d.type;
           document.getElementById('destRegion').value = d.region || 'Tô Múa';
           document.getElementById('destLat').value = lat;
           document.getElementById('destLng').value = lng;
-          document.getElementById('destDescVi').value = d.description?.vi || '';
           document.getElementById('destColor').value = d.color || '#0e7490';
+          
+          // Load multilingual data
+          destNames = d.name || {};
+          destDescs = d.description || {};
+          currentLang = 'vi';
+          document.getElementById('destNameInput').value = destNames['vi'] || '';
+          document.getElementById('destDescInput').value = destDescs['vi'] || '';
+          switchLang('vi');
           
           // Populate stats field
           const stats = d.stats?.vi || d.stats?.en || {};
@@ -2575,6 +2583,107 @@
       }
     });
 
+// === LANGUAGE TABS ===
+const LANG_LABELS = {
+  'vi': 'Tiếng Việt', 'en': 'English', 'ko': '한국어', 'ru': 'Русский',
+  'th': 'ภาษาไทย', 'zh-Hans': '中文', 'id': 'Bahasa Indonesia', 'ms': 'Bahasa Melayu',
+  'es': 'Español', 'fr': 'Français', 'de': 'Deutsch'
+};
+
+const SUPPORTED_LANGS = ['vi', 'en', 'ko', 'ru', 'th', 'zh-Hans', 'id', 'ms', 'es', 'fr', 'de'];
+
+let currentLang = 'vi';
+let destNames = {};   // { vi: "...", en: "...", ... }
+let destDescs = {};   // { vi: "...", en: "...", ... }
+
+function switchLang(lang) {
+  // Save current lang data
+  destNames[currentLang] = document.getElementById('destNameInput').value;
+  destDescs[currentLang] = document.getElementById('destDescInput').value;
+
+  // Switch to new lang
+  currentLang = lang;
+  document.getElementById('destNameInput').value = destNames[lang] || '';
+  document.getElementById('destDescInput').value = destDescs[lang] || '';
+
+  // Update tab UI
+  document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.lang-tab[data-lang="${lang}"]`)?.classList.add('active');
+
+  // Update label
+  document.getElementById('langLabel').textContent = `(${LANG_LABELS[lang] || lang})`;
+
+  // Update badges
+  updateLangBadges();
+}
+
+function updateLangBadges() {
+  SUPPORTED_LANGS.forEach(lang => {
+    const badge = document.getElementById(`badge-${lang}`);
+    if (badge) {
+      const hasContent = destNames[lang] || destDescs[lang];
+      badge.className = 'lang-tab-badge' + (hasContent ? '' : ' empty');
+    }
+  });
+}
+
+async function autoTranslateFromVi() {
+  const viName = destNames['vi'] || document.getElementById('destNameInput').value;
+  const viDesc = destDescs['vi'] || document.getElementById('destDescInput').value;
+
+  if (!viName && !viDesc) {
+    alert('Vui lòng nhập tên và mô tả tiếng Việt trước');
+    return;
+  }
+
+  const btn = document.getElementById('autoTranslateBtn');
+  btn.disabled = true;
+  btn.innerHTML = '⏳ Đang dịch...';
+
+  try {
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch('/api/translate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ name: viName, description: viDesc })
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      // Merge translated data
+      if (data.data.name) {
+        destNames = { ...destNames, ...data.data.name };
+      }
+      if (data.data.description) {
+        destDescs = { ...destDescs, ...data.data.description };
+      }
+
+      // Refresh current view
+      switchLang(currentLang);
+      alert('Đã dịch xong! Chuyển tab để xem kết quả.');
+    } else {
+      alert('Lỗi dịch: ' + (data.message || 'Unknown error'));
+    }
+  } catch (error) {
+    alert('Lỗi kết nối: ' + error.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '🔄 Dịch tự động từ Tiếng Việt';
+  }
+}
+
+function resetLangTabs() {
+  destNames = {};
+  destDescs = {};
+  currentLang = 'vi';
+  document.getElementById('destNameInput').value = '';
+  document.getElementById('destDescInput').value = '';
+  switchLang('vi');
+}
+
 // === WINDOW EXPORTS FOR ONCLICK HANDLERS ===
 window.showView = showView;
 window.handleLogout = handleLogout;
@@ -2587,6 +2696,8 @@ window.approveDestination = approveDestination;
 window.approveDeleteDestination = approveDeleteDestination;
 window.rejectDestination = rejectDestination;
 window.submitDestinationForReview = submitDestinationForReview;
+window.switchLang = switchLang;
+window.autoTranslateFromVi = autoTranslateFromVi;
 window.addVisitorNote = addVisitorNote;
 window.openRouteModal = openRouteModal;
 window.closeRouteModal = closeRouteModal;
