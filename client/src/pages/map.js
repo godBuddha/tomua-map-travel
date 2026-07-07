@@ -153,6 +153,7 @@ window.filterEvents = filterEvents;
 
 function renderRoutesOnMap() {
   routeGroup.clearLayers();
+  const lang = getLang();
   const filtered = currentRouteTransport === 'all' ? allRoutesData : allRoutesData.filter(r => r.transport === currentRouteTransport);
   filtered.forEach(route => {
     const transportColors = { walk: '#2d6a4f', bike: '#0e7490', car: '#d97706' };
