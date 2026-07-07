@@ -817,7 +817,10 @@
           </div>
           <div class="form-group">
             <label>Vĩ độ (Latitude)</label>
-            <input type="text" id="destLat" placeholder="20.8440" />
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="destLat" placeholder="20.8440" style="flex:1;" />
+              <button type="button" class="btn btn-outline btn-sm" id="gpsLocateBtn" onclick="locateGPS()" title="Định vị当前位置" style="white-space:nowrap;min-width:44px;">📍 GPS</button>
+            </div>
           </div>
           <div class="form-group">
             <label>Kinh độ (Longitude)</label>
@@ -826,7 +829,7 @@
           <div class="form-group full">
             <label>Chọn vị trí trên bản đồ</label>
             <div class="map-picker" id="modalMap"></div>
-            <div class="hint">Nhấp vào bản đồ để chọn tọa độ</div>
+            <div class="hint">Nhấp vào bản đồ để chọn tọa độ, hoặc nhập tọa độ thủ công rồi nhấn Enter</div>
           </div>
           <div class="form-group full">
             <label>Mô tả</label>

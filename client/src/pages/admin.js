@@ -696,9 +696,84 @@
         document.getElementById('destLng').value = e.latlng.lng.toFixed(6);
       });
       
+      // Restore marker if lat/lng already set
+      const lat = parseFloat(document.getElementById('destLat').value);
+      const lng = parseFloat(document.getElementById('destLng').value);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        tempMarker = L.marker([lat, lng]).addTo(modalMap);
+        modalMap.setView([lat, lng], 15);
+      }
+      
+      // Two-way binding: lat/lng input → marker
+      let updateTimeout = null;
+      const latInput = document.getElementById('destLat');
+      const lngInput = document.getElementById('destLng');
+      
+      function updateMarkerFromInputs() {
+        const lat = parseFloat(latInput.value);
+        const lng = parseFloat(lngInput.value);
+        if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) return;
+        if (tempMarker) modalMap.removeLayer(tempMarker);
+        tempMarker = L.marker([lat, lng]).addTo(modalMap);
+        modalMap.setView([lat, lng], modalMap.getZoom());
+      }
+      
+      latInput.addEventListener('input', () => {
+        clearTimeout(updateTimeout);
+        updateTimeout = setTimeout(updateMarkerFromInputs, 500);
+      });
+      lngInput.addEventListener('input', () => {
+        clearTimeout(updateTimeout);
+        updateTimeout = setTimeout(updateMarkerFromInputs, 500);
+      });
+      
       setTimeout(() => {
         modalMap.invalidateSize();
       }, 200);
+    }
+
+    // GPS定位 function
+    function locateGPS() {
+      const btn = document.getElementById('gpsLocateBtn');
+      if (!navigator.geolocation) {
+        alert('Trình duyệt không hỗ trợ định vị GPS');
+        return;
+      }
+      
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Đang định vị...';
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          document.getElementById('destLat').value = lat.toFixed(6);
+          document.getElementById('destLng').value = lng.toFixed(6);
+          
+          // Update marker on map
+          if (modalMap) {
+            if (tempMarker) modalMap.removeLayer(tempMarker);
+            tempMarker = L.marker([lat, lng]).addTo(modalMap);
+            modalMap.setView([lat, lng], 16);
+          }
+          
+          btn.disabled = false;
+          btn.innerHTML = '📍 GPS';
+        },
+        (error) => {
+          let msg = 'Không thể định vị: ';
+          switch(error.code) {
+            case error.PERMISSION_DENIED: msg += 'Bạn đã từ chối quyền truy cập vị trí'; break;
+            case error.POSITION_UNAVAILABLE: msg += 'Không thể xác định vị trí'; break;
+            case error.TIMEOUT: msg += 'Hết thời gian chờ'; break;
+            default: msg += error.message;
+          }
+          alert(msg);
+          btn.disabled = false;
+          btn.innerHTML = '📍 GPS';
+        },
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+      );
     }
 
     function closeModal() {

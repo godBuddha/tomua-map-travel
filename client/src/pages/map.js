@@ -107,6 +107,24 @@ async function loadDestinations() {
           className: '', iconSize: [36, 36], iconAnchor: [18, 18]
         });
         const marker = L.marker([d.lat, d.lng], { icon }).addTo(markerGroup);
+        
+        // Custom popup
+        const popupContent = `
+          <div style="min-width:200px;max-width:280px;font-family:'Be Vietnam Pro',sans-serif;">
+            <div style="background:${gradients[d.type] || gradients.waterfall};padding:12px;border-radius:8px 8px 0 0;color:#fff;">
+              <div style="font-size:11px;opacity:0.8;margin-bottom:4px;">${typeEmoji[d.type] || '📍'} ${getTypeLabel(d.type)}</div>
+              <div style="font-size:15px;font-weight:600;">${escapeHtml(d.name)}</div>
+            </div>
+            <div style="padding:10px 12px;">
+              <p style="font-size:12px;color:#666;margin:0 0 8px;line-height:1.4;">${escapeHtml(d.desc.substring(0, 100))}${d.desc.length > 100 ? '...' : ''}</p>
+              <div style="display:flex;gap:6px;">
+                <a href="detail.html?slug=${d.slug}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:4px;padding:8px 12px;background:var(--accent,#2d6a4f);color:#fff;border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;">📄 Chi tiết</a>
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${d.lat},${d.lng}" target="_blank" style="display:flex;align-items:center;justify-content:center;padding:8px 12px;background:var(--bg,#f3f4f6);color:var(--fg,#1f2937);border-radius:6px;font-size:12px;font-weight:500;text-decoration:none;border:1px solid var(--border,#e5e7eb);">📍 Chỉ đường</a>
+              </div>
+            </div>
+          </div>
+        `;
+        marker.bindPopup(popupContent, { className: 'custom-popup', closeButton: true, maxWidth: 300 });
         marker.on('click', () => showInfoPanel(d));
         markers[d.id] = marker;
       });
@@ -172,6 +190,28 @@ function renderRoutesOnMap() {
             html: `<div style="background:${color};width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);">${i + 1}</div>`,
             className: '', iconSize: [24, 24], iconAnchor: [12, 12]
           });
+          const stopName = stop.destination_name?.[lang] || stop.destination_name?.vi || 'Điểm dừng';
+          const stopDesc = stop.description?.[lang] || stop.description?.vi || '';
+          const routeName = route.name?.[lang] || route.name?.vi || 'Lộ trình';
+          
+          const popupContent = `
+            <div style="min-width:160px;max-width:220px;font-family:'Be Vietnam Pro',sans-serif;">
+              <div style="background:${color};padding:8px 10px;border-radius:8px 8px 0 0;color:#fff;">
+                <div style="font-size:10px;opacity:0.8;">Điểm dừng ${i + 1} / ${escapeHtml(routeName)}</div>
+                <div style="font-size:13px;font-weight:600;margin-top:2px;">${escapeHtml(stopName)}</div>
+              </div>
+              ${stopDesc ? `<div style="padding:6px 10px;font-size:11px;color:#666;">${escapeHtml(stopDesc)}</div>` : ''}
+              <div style="padding:4px 10px 8px;">
+                <a href="https://www.google.com/maps/dir/?api=1&destination=${stop.destination_lat},${stop.destination_lng}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 8px;background:var(--bg,#f3f4f6);color:var(--fg,#1f2937);border-radius:6px;font-size:11px;text-decoration:none;border:1px solid var(--border,#e5e7eb);">📍 Chỉ đường</a>
+              </div>
+            </div>
+          `;
+          L.marker([stop.destination_lat, stop.destination_lng], { icon: stopIcon })
+            .bindPopup(popupContent, { className: 'custom-popup', closeButton: true, maxWidth: 250 })
+            .on('click', () => showRouteInfoPanel(route))
+            .addTo(routeGroup);
+        }
+      });
           const stopName = stop.destination_name?.vi || stop.destination_name?.en || 'Điểm dừng';
           L.marker([stop.destination_lat, stop.destination_lng], { icon: stopIcon })
             .bindPopup(`<b>${stopName}</b><br>Điểm dừng ${i + 1} / ${route.name?.vi || 'Lộ trình'}`)
@@ -213,8 +253,26 @@ function renderEventsOnMap() {
         className: '', iconSize: [32, 32], iconAnchor: [16, 16]
       });
       const name = event.name?.[lang] || event.name?.vi || event.name?.en || 'Event';
+      const desc = event.description?.[lang] || event.description?.vi || '';
+      const startDate = event.start_date ? new Date(event.start_date).toLocaleDateString('vi-VN') : '';
+      const endDate = event.end_date ? new Date(event.end_date).toLocaleDateString('vi-VN') : '';
+      const dateStr = startDate && endDate ? `${startDate} - ${endDate}` : startDate || '';
+      
+      const popupContent = `
+        <div style="min-width:180px;max-width:250px;font-family:'Be Vietnam Pro',sans-serif;">
+          <div style="background:linear-gradient(135deg,#d97706,#b45309);padding:10px;border-radius:8px 8px 0 0;color:#fff;">
+            <div style="font-size:11px;opacity:0.8;margin-bottom:2px;">${icons[event.type] || '📅'} ${event.type || 'Sự kiện'}</div>
+            <div style="font-size:14px;font-weight:600;">${escapeHtml(name)}</div>
+          </div>
+          <div style="padding:8px 10px;">
+            ${desc ? `<p style="font-size:11px;color:#666;margin:0 0 6px;line-height:1.4;">${escapeHtml(desc.substring(0, 80))}${desc.length > 80 ? '...' : ''}</p>` : ''}
+            ${dateStr ? `<div style="font-size:11px;color:#888;margin-bottom:6px;">📅 ${dateStr}</div>` : ''}
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${event.lat},${event.lng}" target="_blank" style="display:flex;align-items:center;justify-content:center;gap:4px;padding:7px 10px;background:var(--bg,#f3f4f6);color:var(--fg,#1f2937);border-radius:6px;font-size:11px;font-weight:500;text-decoration:none;border:1px solid var(--border,#e5e7eb);">📍 Chỉ đường</a>
+          </div>
+        </div>
+      `;
       L.marker([event.lat, event.lng], { icon })
-        .bindPopup(`<b>${name}</b><br>${event.type || ''}`)
+        .bindPopup(popupContent, { className: 'custom-popup', closeButton: true, maxWidth: 280 })
         .on('click', () => showEventInfoPanel(event))
         .addTo(eventGroup);
     }
