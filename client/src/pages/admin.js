@@ -2825,3 +2825,4 @@ window.loadUsersList = loadUsersList;
 window.openChangePasswordModal = openChangePasswordModal;
 window.closeChangePasswordModal = closeChangePasswordModal;
 window.handleChangePassword = handleChangePassword;
+window.locateGPS = locateGPS;
