@@ -212,13 +212,6 @@ function renderRoutesOnMap() {
             .addTo(routeGroup);
         }
       });
-          const stopName = stop.destination_name?.vi || stop.destination_name?.en || 'Điểm dừng';
-          L.marker([stop.destination_lat, stop.destination_lng], { icon: stopIcon })
-            .bindPopup(`<b>${stopName}</b><br>Điểm dừng ${i + 1} / ${route.name?.vi || 'Lộ trình'}`)
-            .on('click', () => showRouteInfoPanel(route))
-            .addTo(routeGroup);
-        }
-      });
     }
   });
 }
