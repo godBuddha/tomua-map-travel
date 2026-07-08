@@ -10,7 +10,7 @@ let allRoutes = [];
 let currentRouteFilter = 'all';
 
 function getTypeLabel(type) {
-  return (typeof I18nNew !== 'undefined') ? I18nNew.getCommon(`type.${type}`, type) : type;
+  return typeof I18nNew !== 'undefined' ? I18nNew.getCommon(`type.${type}`, type) : type;
 }
 
 function escapeHtml(str) {
@@ -31,7 +31,7 @@ async function loadDestinationCards(isLoadMore = false) {
   if (isLoadMore && btn) {
     btn.classList.add('loading');
     btn.disabled = true;
-    btnText.textContent = (typeof I18nNew !== 'undefined') ? I18nNew.get('map.loading', 'Đang tải...') : 'Đang tải...';
+    btnText.textContent = typeof I18nNew !== 'undefined' ? I18nNew.get('map.loading', 'Đang tải...') : 'Đang tải...';
     btnArrow.textContent = '⟳';
   }
 
@@ -43,24 +43,28 @@ async function loadDestinationCards(isLoadMore = false) {
 
     if (data.success) {
       const grid = document.getElementById('destGrid');
-      const lang = (typeof I18nNew !== 'undefined') ? I18nNew.getLang() : 'vi';
+      const lang = typeof I18nNew !== 'undefined' ? I18nNew.getLang() : 'vi';
       const newItems = data.data.items;
       totalDestinations = data.data.pagination.total;
 
       const header = document.querySelector('[data-i18n="dest.title"]');
       if (header) {
-        const titleTemplate = (typeof I18nNew !== 'undefined') ? I18nNew.get('dest.title', 'Khám phá {{count}} điểm đến') : 'Khám phá {{count}} điểm đến';
+        const titleTemplate =
+          typeof I18nNew !== 'undefined'
+            ? I18nNew.get('dest.title', 'Khám phá {{count}} điểm đến')
+            : 'Khám phá {{count}} điểm đến';
         header.textContent = titleTemplate.replace('{{count}}', totalDestinations);
       }
 
-      const newHtml = newItems.map((d, index) => {
-        const lat = d.lat || 0;
-        const lng = d.lng || 0;
-        const name = d.name[lang] || d.name.vi || d.name.en || 'Unknown';
-        const desc = d.description ? (d.description[lang] || d.description.vi || d.description.en || '') : '';
-        const typeLabel = getTypeLabel(d.type);
-        const imageUrl = d.image_url || null;
-        return `
+      const newHtml = newItems
+        .map((d, index) => {
+          const lat = d.lat || 0;
+          const lng = d.lng || 0;
+          const name = d.name[lang] || d.name.vi || d.name.en || 'Unknown';
+          const desc = d.description ? d.description[lang] || d.description.vi || d.description.en || '' : '';
+          const typeLabel = getTypeLabel(d.type);
+          const imageUrl = d.image_url || null;
+          return `
           <a href="detail.html?slug=${d.slug}" class="dest-card type-${d.type}" style="animation-delay: ${(isLoadMore ? 0 : index) * 0.05}s">
             <div class="dest-img" ${imageUrl ? `style="background-image: url('${imageUrl}'); background-size: cover; background-position: center;"` : ''}>
               <span class="dest-type">${typeLabel}</span>
@@ -75,7 +79,8 @@ async function loadDestinationCards(isLoadMore = false) {
               </div>
             </div>
           </a>`;
-      }).join('');
+        })
+        .join('');
 
       if (isLoadMore) {
         grid.insertAdjacentHTML('beforeend', newHtml);
@@ -148,35 +153,55 @@ window.filterEvents = filterEvents;
 function renderEvents() {
   const grid = document.getElementById('eventsGrid');
   if (!grid) return;
-  const lang = (typeof I18nNew !== 'undefined') ? I18nNew.getLang() : 'vi';
-  const typeIcons = { festival: '🎪', season: '🌿', experience: '⛰️', cultural: '🎭', sport: '🏃', food: '🍜', other: '📌' };
+  const lang = typeof I18nNew !== 'undefined' ? I18nNew.getLang() : 'vi';
+  const typeIcons = {
+    festival: '🎪',
+    season: '🌿',
+    experience: '⛰️',
+    cultural: '🎭',
+    sport: '🏃',
+    food: '🍜',
+    other: '📌'
+  };
   const filtered = currentEventFilter === 'all' ? allEvents : allEvents.filter(e => e.type === currentEventFilter);
-  const formatDate = d => { if (!d) return ''; return new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }); };
+  const formatDate = d => {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
 
   if (filtered.length === 0) {
     grid.innerHTML = '<p style="color:var(--muted); text-align:center;">Không có sự kiện nào</p>';
     return;
   }
-  grid.innerHTML = filtered.map(event => {
-    const name = escapeHtml(event.name[lang] || event.name.vi || event.name.en);
-    const desc = event.description ? (event.description[lang] || event.description.vi || event.description.en || '') : '';
-    const icon = event.icon || typeIcons[event.type] || '📅';
-    return `
-      <div class="event-card" onclick="window.location.href='detail.html?slug=${event.slug}'" style="cursor:pointer;">
+  grid.innerHTML = filtered
+    .map(event => {
+      const name = escapeHtml(event.name[lang] || event.name.vi || event.name.en);
+      const desc = event.description
+        ? event.description[lang] || event.description.vi || event.description.en || ''
+        : '';
+      const icon = event.icon || typeIcons[event.type] || '📅';
+      return `
+      <div class="event-card" onclick="window.location.href='detail.html?slug=${event.slug}&type=event'" style="cursor:pointer;">
         <div class="event-icon">${icon}</div>
         <h3>${name}</h3>
         <p>${desc.substring(0, 120)}...</p>
         <div class="event-meta"><span>📅 ${formatDate(event.start_date)}</span></div>
       </div>`;
-  }).join('');
+    })
+    .join('');
 }
 
 async function loadEvents() {
   try {
     const response = await fetch('/api/events?status=published');
     const data = await response.json();
-    if (data.success) { allEvents = data.data.items; renderEvents(); }
-  } catch (error) { console.error('Error loading events:', error); }
+    if (data.success) {
+      allEvents = data.data.items;
+      renderEvents();
+    }
+  } catch (error) {
+    console.error('Error loading events:', error);
+  }
 }
 
 // === ROUTES ===
@@ -191,78 +216,115 @@ window.filterRoutes = filterRoutes;
 function renderRoutes() {
   const grid = document.getElementById('routesGrid');
   if (!grid) return;
-  const lang = (typeof I18nNew !== 'undefined') ? I18nNew.getLang() : 'vi';
+  const lang = typeof I18nNew !== 'undefined' ? I18nNew.getLang() : 'vi';
   const filtered = currentRouteFilter === 'all' ? allRoutes : allRoutes.filter(r => r.transport === currentRouteFilter);
 
   if (filtered.length === 0) {
     grid.innerHTML = '<p style="color:var(--muted); text-align:center;">Không có lộ trình nào</p>';
     return;
   }
-  grid.innerHTML = filtered.map(route => {
-    const name = escapeHtml(route.name[lang] || route.name.vi || route.name.en);
-    const desc = route.description ? (route.description[lang] || route.description.vi || route.description.en || '') : '';
-    const stops = route.stops || [];
-    const stopsHtml = stops.map((s, i) => {
-      const stopName = s.destination_name ? (s.destination_name[lang] || s.destination_name.vi || s.destination_name.en) : 'Unknown';
-      return `<span class="route-stop"><span class="dot" style="background:var(--accent)"></span>${stopName}</span>${i < stops.length - 1 ? '<span class="route-arrow">→</span>' : ''}`;
-    }).join('');
-    return `
-      <div class="route-card" onclick="window.location.href='detail.html?slug=${route.slug}'" style="cursor:pointer;">
+  grid.innerHTML = filtered
+    .map(route => {
+      const name = escapeHtml(route.name[lang] || route.name.vi || route.name.en);
+      const desc = route.description
+        ? route.description[lang] || route.description.vi || route.description.en || ''
+        : '';
+      const stops = route.stops || [];
+      const stopsHtml = stops
+        .map((s, i) => {
+          const stopName = s.destination_name
+            ? s.destination_name[lang] || s.destination_name.vi || s.destination_name.en
+            : 'Unknown';
+          return `<span class="route-stop"><span class="dot" style="background:var(--accent)"></span>${stopName}</span>${i < stops.length - 1 ? '<span class="route-arrow">→</span>' : ''}`;
+        })
+        .join('');
+      return `
+      <div class="route-card" onclick="window.location.href='detail.html?slug=${route.slug}&type=route'" style="cursor:pointer;">
         <div class="route-header"><h3>${name}</h3></div>
         <p>${desc.substring(0, 150)}...</p>
         <div class="route-stops">${stopsHtml || '<span style="color:var(--muted)">Chưa có điểm dừng</span>'}</div>
       </div>`;
-  }).join('');
+    })
+    .join('');
 }
 
 async function loadRoutes() {
   try {
     const response = await fetch('/api/routes?status=published');
     const data = await response.json();
-    if (data.success) { allRoutes = data.data.items; renderRoutes(); }
-  } catch (error) { console.error('Error loading routes:', error); }
+    if (data.success) {
+      allRoutes = data.data.items;
+      renderRoutes();
+    }
+  } catch (error) {
+    console.error('Error loading routes:', error);
+  }
 }
 
 // === MINI MAP ===
 function initMiniMap() {
   if (typeof L === 'undefined') return;
-  const center = (typeof TomuaConfig !== 'undefined' && TomuaConfig.mapCenter) ? TomuaConfig.mapCenter : [20.844, 104.825];
+  const center =
+    typeof TomuaConfig !== 'undefined' && TomuaConfig.mapCenter ? TomuaConfig.mapCenter : [20.844, 104.825];
   const map = L.map('mini-map', { zoomControl: false, attributionControl: false }).setView(center, 11);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 18 }).addTo(map);
 
-  const geoFiles = (typeof TomuaConfig !== 'undefined' && TomuaConfig.geoFiles) ? TomuaConfig.geoFiles : [
-    { file: 'Tô Múa - 63.geojson', name: 'Tô Múa', color: '#2d6a4f' },
-    { file: 'Chiềng Khoa - 63.geojson', name: 'Chiềng Khoa', color: '#0e7490' },
-    { file: 'Suối Bàng - 63.geojson', name: 'Suối Bàng', color: '#d97706' }
-  ];
+  const geoFiles =
+    typeof TomuaConfig !== 'undefined' && TomuaConfig.geoFiles
+      ? TomuaConfig.geoFiles
+      : [
+          { file: 'Tô Múa - 63.geojson', name: 'Tô Múa', color: '#2d6a4f' },
+          { file: 'Chiềng Khoa - 63.geojson', name: 'Chiềng Khoa', color: '#0e7490' },
+          { file: 'Suối Bàng - 63.geojson', name: 'Suối Bàng', color: '#d97706' }
+        ];
   geoFiles.forEach(({ file, name, color }) => {
-    fetch(file).then(r => r.json()).then(data => {
-      L.geoJSON(data, { style: { color, weight: 2.5, opacity: 0.8, fillColor: color, fillOpacity: 0.1, dashArray: '6 4' } })
-        .bindTooltip(name, { permanent: false, direction: 'center' }).addTo(map);
-    }).catch(() => {});
+    fetch(file)
+      .then(r => r.json())
+      .then(data => {
+        L.geoJSON(data, {
+          style: { color, weight: 2.5, opacity: 0.8, fillColor: color, fillOpacity: 0.1, dashArray: '6 4' }
+        })
+          .bindTooltip(name, { permanent: false, direction: 'center' })
+          .addTo(map);
+      })
+      .catch(() => {});
   });
 
-  const mergedFile = (typeof TomuaConfig !== 'undefined' && TomuaConfig.mergedBoundary) ? TomuaConfig.mergedBoundary : 'Tô Múa (phường xã) - 34.geojson';
-  fetch(mergedFile).then(r => r.json()).then(data => {
-    L.geoJSON(data, { style: { color: '#1b4332', weight: 3, opacity: 1, fillColor: '#1b4332', fillOpacity: 0.04 } }).addTo(map);
-  }).catch(() => {});
+  const mergedFile =
+    typeof TomuaConfig !== 'undefined' && TomuaConfig.mergedBoundary
+      ? TomuaConfig.mergedBoundary
+      : 'Tô Múa (phường xã) - 34.geojson';
+  fetch(mergedFile)
+    .then(r => r.json())
+    .then(data => {
+      L.geoJSON(data, {
+        style: { color: '#1b4332', weight: 3, opacity: 1, fillColor: '#1b4332', fillOpacity: 0.04 }
+      }).addTo(map);
+    })
+    .catch(() => {});
 
-  const typeColors = (typeof TomuaConfig !== 'undefined') ? TomuaConfig.typeColors : {};
-  const typeEmoji = (typeof TomuaConfig !== 'undefined') ? TomuaConfig.typeEmoji : {};
+  const typeColors = typeof TomuaConfig !== 'undefined' ? TomuaConfig.typeColors : {};
+  const typeEmoji = typeof TomuaConfig !== 'undefined' ? TomuaConfig.typeEmoji : {};
 
-  fetch('/api/destinations?status=published').then(r => r.json()).then(data => {
-    if (data.success) {
-      data.data.items.forEach(d => {
-        const lat = d.lat || 0; const lng = d.lng || 0;
-        const name = d.name.vi || d.name.en || 'Unknown';
-        const icon = L.divIcon({
-          html: `<div style="background:${typeColors[d.type] || '#666'};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">${typeEmoji[d.type] || '📍'}</div>`,
-          className: '', iconSize: [32, 32], iconAnchor: [16, 16]
+  fetch('/api/destinations?status=published')
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        data.data.items.forEach(d => {
+          const lat = d.lat || 0;
+          const lng = d.lng || 0;
+          const name = d.name.vi || d.name.en || 'Unknown';
+          const icon = L.divIcon({
+            html: `<div style="background:${typeColors[d.type] || '#666'};width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.3);">${typeEmoji[d.type] || '📍'}</div>`,
+            className: '',
+            iconSize: [32, 32],
+            iconAnchor: [16, 16]
+          });
+          L.marker([lat, lng], { icon }).addTo(map).bindPopup(`<strong>${name}</strong>`);
         });
-        L.marker([lat, lng], { icon }).addTo(map).bindPopup(`<strong>${name}</strong>`);
-      });
-    }
-  }).catch(() => {});
+      }
+    })
+    .catch(() => {});
 
   setTimeout(() => map.invalidateSize(), 200);
 }
@@ -276,18 +338,22 @@ async function loadHomepageStats() {
       const stats = data.data.homepage_stats.stats;
       const grid = document.getElementById('statsGrid');
       if (grid && stats) {
-        grid.innerHTML = stats.map(s => {
-          const label = (typeof I18nNew !== 'undefined') ? I18nNew.get(s.labelKey, s.labelKey) : s.labelKey;
-          return `
+        grid.innerHTML = stats
+          .map(s => {
+            const label = typeof I18nNew !== 'undefined' ? I18nNew.get(s.labelKey, s.labelKey) : s.labelKey;
+            return `
             <div class="stat-card">
               <span class="stat-icon">${s.icon}</span>
               <span class="stat-number">${s.number}${s.unit ? ' <span class="stat-unit">' + s.unit + '</span>' : ''}</span>
               <span class="stat-label">${label}</span>
             </div>`;
-        }).join('');
+          })
+          .join('');
       }
     }
-  } catch (e) { console.error('Error loading stats:', e); }
+  } catch (e) {
+    console.error('Error loading stats:', e);
+  }
 }
 
 // === EVENT FILTERS ===
@@ -299,13 +365,17 @@ async function loadEventFilters() {
       const filters = data.data.event_filters.filters;
       const container = document.getElementById('eventFilters');
       if (container && filters) {
-        container.innerHTML = filters.map((f, i) => {
-          const label = (typeof I18nNew !== 'undefined') ? I18nNew.get(f.labelKey, f.labelKey) : f.labelKey;
-          return `<button class="filter-chip${i === 0 ? ' active' : ''}" onclick="filterEvents('${f.type}', this)">${f.icon ? f.icon + ' ' : ''}${label}</button>`;
-        }).join('');
+        container.innerHTML = filters
+          .map((f, i) => {
+            const label = typeof I18nNew !== 'undefined' ? I18nNew.get(f.labelKey, f.labelKey) : f.labelKey;
+            return `<button class="filter-chip${i === 0 ? ' active' : ''}" onclick="filterEvents('${f.type}', this)">${f.icon ? f.icon + ' ' : ''}${label}</button>`;
+          })
+          .join('');
       }
     }
-  } catch (e) { console.error('Error loading event filters:', e); }
+  } catch (e) {
+    console.error('Error loading event filters:', e);
+  }
 }
 
 // === ROUTE FILTERS ===
@@ -317,13 +387,17 @@ async function loadRouteFilters() {
       const filters = data.data.route_filters.filters;
       const container = document.getElementById('routeFilters');
       if (container && filters) {
-        container.innerHTML = filters.map((f, i) => {
-          const label = (typeof I18nNew !== 'undefined') ? I18nNew.get(f.labelKey, f.labelKey) : f.labelKey;
-          return `<button class="filter-chip${i === 0 ? ' active' : ''}" onclick="filterRoutes('${f.type}', this)">${f.icon ? f.icon + ' ' : ''}${label}</button>`;
-        }).join('');
+        container.innerHTML = filters
+          .map((f, i) => {
+            const label = typeof I18nNew !== 'undefined' ? I18nNew.get(f.labelKey, f.labelKey) : f.labelKey;
+            return `<button class="filter-chip${i === 0 ? ' active' : ''}" onclick="filterRoutes('${f.type}', this)">${f.icon ? f.icon + ' ' : ''}${label}</button>`;
+          })
+          .join('');
       }
     }
-  } catch (e) { console.error('Error loading route filters:', e); }
+  } catch (e) {
+    console.error('Error loading route filters:', e);
+  }
 }
 
 // === INIT ===
@@ -331,9 +405,13 @@ function initIndexPage() {
   document.body.classList.add('page-fade-in');
 
   const navbar = document.getElementById('navbar');
-  window.addEventListener('scroll', () => {
-    if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 60);
-  }, { passive: true });
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (navbar) navbar.classList.toggle('scrolled', window.scrollY > 60);
+    },
+    { passive: true }
+  );
 
   const mobileToggle = document.getElementById('mobileToggle');
   const navLinks = document.getElementById('navLinks');
