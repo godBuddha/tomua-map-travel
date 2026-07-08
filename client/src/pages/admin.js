@@ -854,6 +854,7 @@ async function saveDestination() {
   // Save current language before submitting
   destNames[currentLang] = document.getElementById('destNameInput').value;
   destDescs[currentLang] = document.getElementById('destDescInput').value;
+  destQuotes[currentLang] = document.getElementById('destQuoteInput').value;
 
   const nameVi = destNames['vi'] || '';
   const type = document.getElementById('destType').value;
@@ -921,6 +922,7 @@ async function saveDestination() {
     lat,
     lng,
     description: destDescs,
+    quote: destQuotes,
     color,
     status,
     image_url: imageUrl,
@@ -997,9 +999,11 @@ async function editDestination(id) {
       // Load multilingual data
       destNames = d.name || {};
       destDescs = d.description || {};
+      destQuotes = d.quote || {};
       currentLang = 'vi';
       document.getElementById('destNameInput').value = destNames['vi'] || '';
       document.getElementById('destDescInput').value = destDescs['vi'] || '';
+      document.getElementById('destQuoteInput').value = destQuotes['vi'] || '';
       switchLang('vi');
 
       // Populate stats field
@@ -2989,16 +2993,19 @@ const SUPPORTED_LANGS = ['vi', 'en', 'ko', 'ru', 'th', 'zh-Hans', 'id', 'ms', 'e
 let currentLang = 'vi';
 let destNames = {}; // { vi: "...", en: "...", ... }
 let destDescs = {}; // { vi: "...", en: "...", ... }
+let destQuotes = {}; // { vi: "...", en: "...", ... }
 
 function switchLang(lang) {
   // Save current lang data
   destNames[currentLang] = document.getElementById('destNameInput').value;
   destDescs[currentLang] = document.getElementById('destDescInput').value;
+  destQuotes[currentLang] = document.getElementById('destQuoteInput').value;
 
   // Switch to new lang
   currentLang = lang;
   document.getElementById('destNameInput').value = destNames[lang] || '';
   document.getElementById('destDescInput').value = destDescs[lang] || '';
+  document.getElementById('destQuoteInput').value = destQuotes[lang] || '';
 
   // Update tab UI
   document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
@@ -3024,6 +3031,7 @@ function updateLangBadges() {
 async function autoTranslateFromVi() {
   const viName = destNames['vi'] || document.getElementById('destNameInput').value;
   const viDesc = destDescs['vi'] || document.getElementById('destDescInput').value;
+  const viQuote = destQuotes['vi'] || document.getElementById('destQuoteInput').value;
 
   if (!viName && !viDesc) {
     alert('Vui lòng nhập tên và mô tả tiếng Việt trước');
@@ -3042,7 +3050,7 @@ async function autoTranslateFromVi() {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ name: viName, description: viDesc })
+      body: JSON.stringify({ name: viName, description: viDesc, quote: viQuote })
     });
 
     const data = await response.json();
@@ -3053,6 +3061,9 @@ async function autoTranslateFromVi() {
       }
       if (data.data.description) {
         destDescs = { ...destDescs, ...data.data.description };
+      }
+      if (data.data.quote) {
+        destQuotes = { ...destQuotes, ...data.data.quote };
       }
 
       // Refresh current view
@@ -3072,9 +3083,11 @@ async function autoTranslateFromVi() {
 function resetLangTabs() {
   destNames = {};
   destDescs = {};
+  destQuotes = {};
   currentLang = 'vi';
   document.getElementById('destNameInput').value = '';
   document.getElementById('destDescInput').value = '';
+  document.getElementById('destQuoteInput').value = '';
   switchLang('vi');
 }
 
