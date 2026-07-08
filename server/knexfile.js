@@ -25,7 +25,7 @@ module.exports = {
 
   test: {
     client: 'pg',
-    connection: process.env.TEST_DATABASE_URL || {
+    connection: process.env.DATABASE_URL || process.env.TEST_DATABASE_URL || {
       host: 'localhost',
       port: 5432,
       user: 'tomua_admin',
