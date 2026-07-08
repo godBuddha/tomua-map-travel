@@ -503,7 +503,12 @@ async function loadComments() {
 
 // === INIT ===
 if (typeof I18nNew !== 'undefined') {
-  I18nNew.init('detail').then(() => loadEntity());
+  I18nNew.init('detail')
+    .then(() => loadEntity())
+    .catch(err => {
+      console.error('i18n init failed:', err);
+      loadEntity();
+    });
   document.addEventListener('i18n-changed', () => {
     if (window.dest) {
       const lang = I18nNew.getLang();

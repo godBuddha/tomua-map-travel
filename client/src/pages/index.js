@@ -65,7 +65,7 @@ async function loadDestinationCards(isLoadMore = false) {
           const typeLabel = getTypeLabel(d.type);
           const imageUrl = d.image_url || null;
           return `
-          <a href="detail.html?slug=${d.slug}" class="dest-card type-${d.type}" style="animation-delay: ${(isLoadMore ? 0 : index) * 0.05}s">
+          <a href="detail.html?slug=${d.slug}&type=destination" class="dest-card type-${d.type}" style="animation-delay: ${(isLoadMore ? 0 : index) * 0.05}s">
             <div class="dest-img" ${imageUrl ? `style="background-image: url('${imageUrl}'); background-size: cover; background-position: center;"` : ''}>
               <span class="dest-type">${typeLabel}</span>
               <span class="dest-region">${d.region || 'Tô Múa'}</span>
