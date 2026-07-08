@@ -1,5 +1,5 @@
 const Settings = require('../models/settings.model');
-const { success, badRequest, serverError } = require('../utils/response');
+const { success, badRequest } = require('../utils/response');
 
 const SettingsController = {
   async getAll(req, res, next) {
@@ -15,11 +15,11 @@ const SettingsController = {
     try {
       const { key } = req.params;
       const { value, description } = req.body;
-      
+
       if (value === undefined) {
         return badRequest(res, 'Value is required');
       }
-      
+
       const updated = await Settings.update(key, value, description, req.user.id);
       return success(res, updated);
     } catch (error) {

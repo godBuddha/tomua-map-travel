@@ -82,7 +82,7 @@ const RouteController = {
     try {
       // Remove stops from route data (they go in route_stops table)
       const { stops, ...routeData } = req.body;
-      
+
       const data = {
         ...routeData,
         created_by: req.user.id,
@@ -139,10 +139,20 @@ const RouteController = {
 
       // Handle stops update
       const { stops, ...routeDataRaw } = req.body;
-      
+
       // Whitelist allowed fields to prevent mass assignment
-      const allowedFields = ['name', 'description', 'transport', 'duration', 'difficulty', 
-        'distance_km', 'estimated_time_min', 'elevation_gain_m', 'image_url', 'metadata'];
+      const allowedFields = [
+        'name',
+        'description',
+        'transport',
+        'duration',
+        'difficulty',
+        'distance_km',
+        'estimated_time_min',
+        'elevation_gain_m',
+        'image_url',
+        'metadata'
+      ];
       const routeData = {};
       for (const field of allowedFields) {
         if (routeDataRaw[field] !== undefined) {
@@ -165,8 +175,8 @@ const RouteController = {
           previous_status: route.status
         };
       }
-      
-      const updated = await Route.update(id, routeData);
+
+      await Route.update(id, routeData);
 
       // Auto-translate in background if name/description changed
       const { enqueueTranslation } = require('../services/translation-queue.service');
@@ -185,7 +195,7 @@ const RouteController = {
       if (stops && Array.isArray(stops)) {
         // Delete existing stops
         await db('route_stops').where('route_id', id).del();
-        
+
         // Insert new stops
         if (stops.length > 0) {
           const stopsData = stops.map((stop, i) => ({
@@ -297,16 +307,18 @@ const RouteController = {
       const updatedRoute = await Route.findById(id);
       if (updatedRoute.stops.length >= 2) {
         try {
-          const coordinates = updatedRoute.stops.map(s => {
-            const loc = s.destination_location;
-            // Extract coordinates from PostGIS point
-            const match = loc.match(/POINT\(([^)]+)\)/);
-            if (match) {
-              const [lng, lat] = match[1].split(' ').map(Number);
-              return [lng, lat];
-            }
-            return null;
-          }).filter(Boolean);
+          const coordinates = updatedRoute.stops
+            .map(s => {
+              const loc = s.destination_location;
+              // Extract coordinates from PostGIS point
+              const match = loc.match(/POINT\(([^)]+)\)/);
+              if (match) {
+                const [lng, lat] = match[1].split(' ').map(Number);
+                return [lng, lat];
+              }
+              return null;
+            })
+            .filter(Boolean);
 
           if (coordinates.length >= 2) {
             const profile = route.transport === 'walk' ? 'foot' : 'car';

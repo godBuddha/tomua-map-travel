@@ -4,32 +4,6 @@ const { generateUniqueSlug } = require('../utils/slugify');
 
 const TABLE = 'destinations';
 
-// BUG-14 FIX: Removed dead code parseLocation() — was never called
-
-// BUG-07 FIX: Simplified addLatLng — removed brittle WKB hex fallback;
-// rely on PostGIS ST_Y/ST_X via parameterized query only
-async function addLatLng(items) {
-  if (!Array.isArray(items)) items = [items];
-
-  for (const item of items) {
-    if (item && item.location) {
-      try {
-        const result = await db.raw('SELECT ST_Y(?::geometry) as lat, ST_X(?::geometry) as lng', [
-          item.location,
-          item.location
-        ]);
-        if (result.rows[0]) {
-          item.lat = parseFloat(result.rows[0].lat);
-          item.lng = parseFloat(result.rows[0].lng);
-        }
-      } catch (e) {
-        console.error('Error parsing location coordinates:', e.message);
-      }
-    }
-  }
-  return items;
-}
-
 const Destination = {
   async findById(id) {
     const destination = await db(TABLE)
@@ -161,7 +135,9 @@ const Destination = {
     const location = createPoint(data.lng, data.lat);
 
     // Remove lat/lng from data since they're stored in location column
-    const { lat, lng, ...insertData } = data;
+    const insertData = { ...data };
+    delete insertData.lat;
+    delete insertData.lng;
 
     // Ensure JSON fields are properly serialized for PostgreSQL
     if (insertData.image_urls && typeof insertData.image_urls === 'object') {

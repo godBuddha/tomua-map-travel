@@ -1,6 +1,6 @@
 const slugify = require('slugify');
 
-const generateSlug = (text) => {
+const generateSlug = text => {
   return slugify(text, {
     lower: true,
     strict: true,
@@ -10,11 +10,12 @@ const generateSlug = (text) => {
 };
 
 const generateUniqueSlug = async (text, table, db, id = null) => {
-  let slug = generateSlug(text);
+  const slug = generateSlug(text);
   let uniqueSlug = slug;
   let counter = 1;
+  let found = false;
 
-  while (true) {
+  while (!found) {
     const query = db(table).where('slug', uniqueSlug);
     if (id) {
       query.andWhereNot('id', id);
@@ -22,12 +23,14 @@ const generateUniqueSlug = async (text, table, db, id = null) => {
     const existing = await query.first();
 
     if (!existing) {
-      return uniqueSlug;
+      found = true;
+    } else {
+      uniqueSlug = `${slug}-${counter}`;
+      counter++;
     }
-
-    uniqueSlug = `${slug}-${counter}`;
-    counter++;
   }
+
+  return uniqueSlug;
 };
 
 module.exports = {
