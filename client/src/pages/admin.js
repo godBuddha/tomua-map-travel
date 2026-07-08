@@ -157,7 +157,7 @@ async function loadDashboard() {
             };
 
             return `<tr>
-                <td><div class="dest-name"><div class="dest-dot" style="background:${typeColors[d.type] || '#666'};"></div>${name}</div></td>
+                <td><div class="dest-name">${d.image_url ? `<img src="${d.image_url}" style="width:32px;height:32px;border-radius:6px;object-fit:cover;flex-shrink:0;">` : `<div class="dest-dot" style="background:${typeColors[d.type] || '#666'};"></div>`}${name}</div></td>
                 <td><span class="badge badge-blue">${typeLabels[d.type] || d.type}</span></td>
                 <td><span class="badge ${statusClasses[d.status] || 'badge-gray'}">${statusLabels[d.status] || d.status}</span></td>
               </tr>`;
@@ -253,7 +253,7 @@ async function loadDestinationsList() {
             };
 
             return `<tr>
-                <td><div class="dest-name"><div class="dest-dot" style="background:${typeColors[d.type] || '#666'};"></div>${name}</div></td>
+                <td><div class="dest-name">${d.image_url ? `<img src="${d.image_url}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;">` : `<div class="dest-dot" style="background:${typeColors[d.type] || '#666'};"></div>`}${name}</div></td>
                 <td><span class="badge badge-blue">${typeLabels[d.type] || d.type}</span></td>
                 <td>${d.region || 'Tô Múa'}</td>
                 <td style="font-family:ui-monospace,monospace;font-size:12px;color:var(--muted);">${lat.toFixed(4)}, ${lng.toFixed(4)}</td>
@@ -1462,7 +1462,7 @@ async function loadEvents(append = false) {
             };
 
             return `<tr>
-                <td><div class="dest-name"><span style="font-size:20px;margin-right:8px;">${icon}</span><span>${name}</span></div></td>
+                <td><div class="dest-name">${event.image_url ? `<img src="${event.image_url}" style="width:40px;height:40px;border-radius:8px;object-fit:cover;flex-shrink:0;">` : `<span style="font-size:20px;margin-right:8px;">${icon}</span>`}<span>${name}</span></div></td>
                 <td><span class="badge badge-blue">${typeLabels[event.type] || event.type}</span></td>
                 <td><span style="font-size:13px;">${formatDate(event.start_date)} — ${formatDate(event.end_date)}</span></td>
                 <td><span style="font-size:13px;">${location}</span></td>
