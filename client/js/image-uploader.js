@@ -10,6 +10,7 @@ class ImageUploader {
     this.onUpload = options.onUpload || function() {};
     this.onMultiUpload = options.onMultiUpload || function() {};
     this.currentImageUrl = options.currentImageUrl || null;
+    this.currentImageUrls = options.currentImageUrls || [];
     this.uploadedImages = [];
     
     this.init();
@@ -28,10 +29,13 @@ class ImageUploader {
       `Hỗ trợ: JPG, PNG, WEBP (Tối đa ${maxSizeMB}MB mỗi file, tối đa ${this.maxFiles} file)` :
       `Hỗ trợ: JPG, PNG, WEBP (Tối đa ${maxSizeMB}MB)`;
 
+    // Determine initial display: for multi-mode, show drop zone always (existing images shown in grid)
+    const hasExisting = this.multiple ? (this.currentImageUrls && this.currentImageUrls.length > 0) : !!this.currentImageUrl;
+    
     container.innerHTML = `
       <div class="image-uploader">
         <div class="image-preview-area" id="${this.containerId}Preview">
-          ${this.currentImageUrl ? 
+          ${(!this.multiple && this.currentImageUrl) ? 
             `<img src="${this.currentImageUrl}" alt="Preview" class="preview-image">
              <button type="button" class="remove-image-btn" onclick="window.imageUploaders['${this.containerId}'].removeImage()">✕</button>` :
             `<div class="upload-placeholder" id="${this.containerId}DropZone">
@@ -42,7 +46,7 @@ class ImageUploader {
              </div>`
           }
         </div>
-        ${this.multiple ? `<div class="multi-preview-grid" id="${this.containerId}Grid" style="display:none;"></div>` : ''}
+        ${this.multiple ? `<div class="multi-preview-grid" id="${this.containerId}Grid" style="${(this.currentImageUrls && this.currentImageUrls.length > 0) ? 'display:grid;' : 'display:none;'};"></div>` : ''}
         <div class="upload-progress" id="${this.containerId}Progress" style="display:none">
           <div class="progress-bar">
             <div class="progress-fill" id="${this.containerId}ProgressFill"></div>
@@ -53,8 +57,40 @@ class ImageUploader {
       </div>
     `;
 
+    // Render existing images in grid for multi-mode
+    if (this.multiple && this.currentImageUrls && this.currentImageUrls.length > 0) {
+      this.renderExistingImages();
+    }
+
     this.addStyles();
     this.bindEvents();
+  }
+
+  renderExistingImages() {
+    const grid = document.getElementById(`${this.containerId}Grid`);
+    if (!grid) return;
+
+    grid.innerHTML = '';
+    this.currentImageUrls.forEach((url, index) => {
+      const item = document.createElement('div');
+      item.className = 'multi-preview-item success';
+      item.id = `${this.containerId}Existing${index}`;
+      item.innerHTML = `
+        <img src="${url}" alt="Ảnh ${index + 1}">
+        <button type="button" class="remove-btn" onclick="window.imageUploaders['${this.containerId}'].removeExistingImage(${index})">✕</button>
+      `;
+      grid.appendChild(item);
+    });
+  }
+
+  removeExistingImage(index) {
+    this.currentImageUrls.splice(index, 1);
+    this.renderExistingImages();
+    if (this.currentImageUrls.length === 0) {
+      const grid = document.getElementById(`${this.containerId}Grid`);
+      if (grid) grid.style.display = 'none';
+    }
+    this.onMultiUpload(this.currentImageUrls.map(url => ({ url })));
   }
 
   addStyles() {
@@ -283,9 +319,11 @@ class ImageUploader {
   handleMultipleFiles(fileList) {
     const files = Array.from(fileList);
     
-    // Validate number of files
-    if (files.length > this.maxFiles) {
-      this.showError(`Tối đa ${this.maxFiles} file. Bạn đã chọn ${files.length} file.`);
+    // Validate number of files including existing
+    const existingCount = this.currentImageUrls ? this.currentImageUrls.length : 0;
+    const totalCount = existingCount + files.length;
+    if (totalCount > this.maxFiles) {
+      this.showError(`Tối đa ${this.maxFiles} ảnh. Hiện có ${existingCount} ảnh, bạn chọn thêm ${files.length} file.`);
       return;
     }
 
@@ -331,16 +369,17 @@ class ImageUploader {
     if (!grid) return;
 
     grid.style.display = 'grid';
-    grid.innerHTML = '';
+    // Don't clear grid - append new previews after existing ones
+    const existingCount = grid.children.length;
 
     files.forEach((file, index) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const item = document.createElement('div');
         item.className = 'multi-preview-item uploading';
-        item.id = `${this.containerId}Item${index}`;
+        item.id = `${this.containerId}Item${existingCount + index}`;
         item.innerHTML = `
-          <img src="${e.target.result}" alt="Preview ${index + 1}">
+          <img src="${e.target.result}" alt="Preview ${existingCount + index + 1}">
           <div class="upload-status">⏳</div>
         `;
         grid.appendChild(item);
@@ -413,6 +452,9 @@ class ImageUploader {
     progressFill.style.width = '0%';
     progressText.textContent = `Đang tải lên 0/${files.length} ảnh...`;
 
+    // Calculate offset for preview items (existing images + already uploaded)
+    const previewOffset = this.currentImageUrls ? this.currentImageUrls.length : 0;
+
     const formData = new FormData();
     files.forEach(file => formData.append('images', file));
     formData.append('category', this.category);
@@ -443,7 +485,7 @@ class ImageUploader {
           
           // Update preview items
           result.data.forEach((img, index) => {
-            const item = document.getElementById(`${this.containerId}Item${index}`);
+            const item = document.getElementById(`${this.containerId}Item${previewOffset + index}`);
             if (item) {
               item.classList.remove('uploading');
               item.classList.add('success');
@@ -453,6 +495,13 @@ class ImageUploader {
           });
           
           this.uploadedImages = result.data;
+          // Append to currentImageUrls
+          if (!this.currentImageUrls) this.currentImageUrls = [];
+          result.data.forEach(d => {
+            if (!this.currentImageUrls.includes(d.url)) {
+              this.currentImageUrls.push(d.url);
+            }
+          });
           this.onMultiUpload(result.data);
         } else {
           throw new Error(result.message || `Lỗi máy chủ: ${xhr.status}`);
@@ -474,6 +523,7 @@ class ImageUploader {
   removeImage() {
     this.currentImageUrl = null;
     this.uploadedImages = [];
+    this.currentImageUrls = [];
     const previewArea = document.getElementById(`${this.containerId}Preview`);
     const grid = document.getElementById(`${this.containerId}Grid`);
     

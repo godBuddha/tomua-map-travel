@@ -138,7 +138,25 @@ const EventController = {
         return forbidden(res, 'You can only update your own events');
       }
 
-      const allowedFields = ['name', 'type', 'description', 'icon', 'start_date', 'end_date', 'start_time', 'end_time', 'recurring', 'frequency', 'season', 'destination_id', 'address', 'image_url', 'lat', 'lng'];
+      const allowedFields = [
+        'name',
+        'type',
+        'description',
+        'icon',
+        'start_date',
+        'end_date',
+        'start_time',
+        'end_time',
+        'recurring',
+        'frequency',
+        'season',
+        'destination_id',
+        'address',
+        'image_url',
+        'image_urls',
+        'lat',
+        'lng'
+      ];
       const data = {};
       for (const field of allowedFields) {
         if (req.body[field] !== undefined) {

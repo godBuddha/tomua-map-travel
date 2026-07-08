@@ -25,9 +25,9 @@ const DestinationController = {
       } else {
         filters.status = req.query.status || undefined;
       }
-      
+
       if (req.user && req.user.role === 'collaborator') {
-         filters.collaborator_id = req.user.id;
+        filters.collaborator_id = req.user.id;
       }
 
       // Check cache for public requests
@@ -40,12 +40,12 @@ const DestinationController = {
       }
 
       const result = await Destination.findAll(filters);
-      
+
       // Cache public results
       if (!req.user) {
         await CacheService.set(cacheKey, result, CACHE_TTL);
       }
-      
+
       return success(res, result);
     } catch (error) {
       next(error);
@@ -55,7 +55,7 @@ const DestinationController = {
   async show(req, res, next) {
     try {
       const { idOrSlug } = req.params;
-      
+
       // Check cache
       const cacheKey = `destination:${idOrSlug}`;
       const cached = await CacheService.get(cacheKey);
@@ -91,11 +91,7 @@ const DestinationController = {
         return badRequest(res, 'Latitude and longitude are required');
       }
 
-      const destinations = await Destination.findNearby(
-        parseFloat(lat),
-        parseFloat(lng),
-        parseInt(radius) || 5000
-      );
+      const destinations = await Destination.findNearby(parseFloat(lat), parseFloat(lng), parseInt(radius) || 5000);
 
       return success(res, destinations);
     } catch (error) {
@@ -149,7 +145,23 @@ const DestinationController = {
         return forbidden(res, 'You can only update your own destinations');
       }
 
-      const allowedFields = ['name', 'type', 'region', 'description', 'quote', 'color', 'gradient', 'stats', 'info', 'address', 'lat', 'lng', 'visitor_notes'];
+      const allowedFields = [
+        'name',
+        'type',
+        'region',
+        'description',
+        'quote',
+        'color',
+        'gradient',
+        'stats',
+        'info',
+        'address',
+        'lat',
+        'lng',
+        'visitor_notes',
+        'image_url',
+        'image_urls'
+      ];
       const data = {};
       for (const field of allowedFields) {
         if (req.body[field] !== undefined) {
@@ -191,14 +203,14 @@ const DestinationController = {
       if (Object.keys(fieldsToTranslate).length > 0) {
         enqueueTranslation('destinations', id, fieldsToTranslate).catch(() => {});
       }
-      
+
       // Invalidate cache
       await CacheService.del(`destination:${id}`);
       if (destination.slug) {
         await CacheService.del(`destination:${destination.slug}`);
       }
       await CacheService.delPattern('destinations:*');
-      
+
       return success(res, updated);
     } catch (error) {
       next(error);
@@ -215,14 +227,14 @@ const DestinationController = {
       }
 
       await Destination.delete(id);
-      
+
       // Invalidate cache
       await CacheService.del(`destination:${id}`);
       if (destination.slug) {
         await CacheService.del(`destination:${destination.slug}`);
       }
       await CacheService.delPattern('destinations:*');
-      
+
       return noContent(res);
     } catch (error) {
       next(error);
@@ -274,7 +286,7 @@ const DestinationController = {
           await CacheService.del(`destination:${destination.slug}`);
         }
         await CacheService.delPattern('destinations:*');
-        
+
         await Comment.create({
           entity_type: 'destination',
           entity_id: id,
@@ -282,7 +294,7 @@ const DestinationController = {
           comment: req.body.comment || 'Deletion approved',
           action: 'approve'
         });
-        
+
         return success(res, { message: 'Destination deleted' });
       }
 
@@ -341,7 +353,7 @@ const DestinationController = {
         rollbackData.status = previousStatus;
         rollbackData.rejection_reason = reason;
         rollbackData.metadata = null;
-        
+
         await Destination.update(id, rollbackData);
 
         await Comment.create({
@@ -369,8 +381,8 @@ const DestinationController = {
         const previousStatus = metadata.previous_status || 'draft';
 
         // Use update directly to preserve rejection_reason regardless of target status
-        await Destination.update(id, { 
-          status: previousStatus, 
+        await Destination.update(id, {
+          status: previousStatus,
           rejection_reason: reason,
           metadata: null
         });
@@ -437,7 +449,7 @@ const DestinationController = {
         previous_status: destination.status
       };
 
-      await Destination.update(id, { 
+      await Destination.update(id, {
         status: 'pending_delete',
         metadata
       });
