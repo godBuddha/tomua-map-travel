@@ -7,11 +7,7 @@ const TABLE = 'events';
 const Event = {
   async findById(id) {
     const event = await db(TABLE)
-      .select(
-        `${TABLE}.*`,
-        db.raw('ST_Y(location::geometry) as lat'),
-        db.raw('ST_X(location::geometry) as lng')
-      )
+      .select(`${TABLE}.*`, db.raw('ST_Y(location::geometry) as lat'), db.raw('ST_X(location::geometry) as lng'))
       .where(`${TABLE}.id`, id)
       .first();
     return event;
@@ -19,23 +15,18 @@ const Event = {
 
   async findBySlug(slug) {
     const event = await db(TABLE)
-      .select(
-        `${TABLE}.*`,
-        db.raw('ST_Y(location::geometry) as lat'),
-        db.raw('ST_X(location::geometry) as lng')
-      )
+      .select(`${TABLE}.*`, db.raw('ST_Y(location::geometry) as lat'), db.raw('ST_X(location::geometry) as lng'))
       .where(`${TABLE}.slug`, slug)
       .first();
     return event;
   },
 
   async findAll(filters = {}) {
-    const query = db(TABLE)
-      .select(
-        `${TABLE}.*`,
-        db.raw('ST_Y(location::geometry) as lat'),
-        db.raw('ST_X(location::geometry) as lng')
-      );
+    const query = db(TABLE).select(
+      `${TABLE}.*`,
+      db.raw('ST_Y(location::geometry) as lat'),
+      db.raw('ST_X(location::geometry) as lng')
+    );
 
     if (filters.type) {
       query.where('type', filters.type);
@@ -43,16 +34,15 @@ const Event = {
     if (filters.status) {
       query.where('status', filters.status);
     }
-    
+
     // BUG-FIX: Secure visibility for collaborators
     if (filters.collaborator_id) {
       // Collaborators see ALL 'published' plus ANY of their own creations
-      query.where(function() {
-        this.where('events.status', 'published')
-            .orWhere('events.created_by', filters.collaborator_id);
+      query.where(function () {
+        this.where('events.status', 'published').orWhere('events.created_by', filters.collaborator_id);
       });
     }
-    
+
     if (filters.destination_id) {
       query.where('destination_id', filters.destination_id);
     }
@@ -63,15 +53,14 @@ const Event = {
       query.where('start_date', '<=', filters.to);
     }
     if (filters.search) {
-      query.where(function() {
-        this.whereRaw("name->>'vi' ILIKE ?", [`%${filters.search}%`])
-          .orWhereRaw("name->>'en' ILIKE ?", [`%${filters.search}%`]);
+      query.where(function () {
+        this.whereRaw("name->>'vi' ILIKE ?", [`%${filters.search}%`]).orWhereRaw("name->>'en' ILIKE ?", [
+          `%${filters.search}%`
+        ]);
       });
     }
 
-    const { offset, limit, page } = require('../utils/pagination').paginate(
-      null, filters.page, filters.limit
-    );
+    const { offset, limit, page } = require('../utils/pagination').paginate(null, filters.page, filters.limit);
 
     const items = await query
       .orderBy(filters.sort || 'start_date', filters.order || 'asc')
@@ -84,18 +73,18 @@ const Event = {
     if (filters.type) countQuery.where('type', filters.type);
     if (filters.status) countQuery.where('status', filters.status);
     if (filters.collaborator_id) {
-      countQuery.where(function() {
-        this.where('events.status', 'published')
-            .orWhere('events.created_by', filters.collaborator_id);
+      countQuery.where(function () {
+        this.where('events.status', 'published').orWhere('events.created_by', filters.collaborator_id);
       });
     }
     if (filters.destination_id) countQuery.where('destination_id', filters.destination_id);
     if (filters.from) countQuery.where('end_date', '>=', filters.from);
     if (filters.to) countQuery.where('start_date', '<=', filters.to);
     if (filters.search) {
-      countQuery.where(function() {
-        this.whereRaw("name->>'vi' ILIKE ?", [`%${filters.search}%`])
-          .orWhereRaw("name->>'en' ILIKE ?", [`%${filters.search}%`]);
+      countQuery.where(function () {
+        this.whereRaw("name->>'vi' ILIKE ?", [`%${filters.search}%`]).orWhereRaw("name->>'en' ILIKE ?", [
+          `%${filters.search}%`
+        ]);
       });
     }
     const countResult = await countQuery.count('id as count').first();
@@ -107,6 +96,7 @@ const Event = {
   async findUpcoming(limit = 10) {
     const today = new Date().toISOString().split('T')[0];
     return db(TABLE)
+      .select(`${TABLE}.*`, db.raw('ST_Y(location::geometry) as lat'), db.raw('ST_X(location::geometry) as lng'))
       .where('status', 'published')
       .where('end_date', '>=', today)
       .orderBy('start_date', 'asc')
@@ -117,7 +107,7 @@ const Event = {
     const slug = await generateUniqueSlug(data.name.vi || data.name.en, TABLE, db);
 
     const insertData = { ...data, slug };
-    
+
     // Only create PostGIS point if lat/lng are provided
     if (data.lat && data.lng) {
       insertData.location = db.raw(createPoint(data.lng, data.lat));
@@ -128,9 +118,12 @@ const Event = {
       delete insertData.location;
     }
 
-    const [event] = await db(TABLE)
-      .insert(insertData)
-      .returning('*');
+    // Ensure JSON fields are properly serialized for PostgreSQL
+    if (insertData.image_urls && typeof insertData.image_urls === 'object') {
+      insertData.image_urls = JSON.stringify(insertData.image_urls);
+    }
+
+    const [event] = await db(TABLE).insert(insertData).returning('*');
 
     return event;
   },
@@ -144,6 +137,11 @@ const Event = {
       delete updateData.lng;
     }
 
+    // Ensure JSON fields are properly serialized for PostgreSQL
+    if (updateData.image_urls && typeof updateData.image_urls === 'object') {
+      updateData.image_urls = JSON.stringify(updateData.image_urls);
+    }
+
     if (data.name && (data.name.vi || data.name.en)) {
       const existing = await this.findById(id);
       if (existing && existing.name.vi !== data.name.vi) {
@@ -151,10 +149,7 @@ const Event = {
       }
     }
 
-    const [event] = await db(TABLE)
-      .where('id', id)
-      .update(updateData)
-      .returning('*');
+    const [event] = await db(TABLE).where('id', id).update(updateData).returning('*');
 
     return event;
   },
@@ -178,10 +173,7 @@ const Event = {
       updateData.rejection_reason = null;
     }
 
-    const [event] = await db(TABLE)
-      .where('id', id)
-      .update(updateData)
-      .returning('*');
+    const [event] = await db(TABLE).where('id', id).update(updateData).returning('*');
 
     return event;
   },

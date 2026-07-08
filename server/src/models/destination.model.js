@@ -10,14 +10,14 @@ const TABLE = 'destinations';
 // rely on PostGIS ST_Y/ST_X via parameterized query only
 async function addLatLng(items) {
   if (!Array.isArray(items)) items = [items];
-  
-  for (let item of items) {
+
+  for (const item of items) {
     if (item && item.location) {
       try {
-        const result = await db.raw(
-          'SELECT ST_Y(?::geometry) as lat, ST_X(?::geometry) as lng',
-          [item.location, item.location]
-        );
+        const result = await db.raw('SELECT ST_Y(?::geometry) as lat, ST_X(?::geometry) as lng', [
+          item.location,
+          item.location
+        ]);
         if (result.rows[0]) {
           item.lat = parseFloat(result.rows[0].lat);
           item.lng = parseFloat(result.rows[0].lng);
@@ -33,36 +33,24 @@ async function addLatLng(items) {
 const Destination = {
   async findById(id) {
     const destination = await db(TABLE)
-      .select(
-        'destinations.*',
-        db.raw('ST_Y(location::geometry) as lat'),
-        db.raw('ST_X(location::geometry) as lng')
-      )
+      .select('destinations.*', db.raw('ST_Y(location::geometry) as lat'), db.raw('ST_X(location::geometry) as lng'))
       .where('destinations.id', id)
       .first();
-    
+
     if (destination) {
-      destination.images = await db('destination_images')
-        .where('destination_id', id)
-        .orderBy('sort_order');
+      destination.images = await db('destination_images').where('destination_id', id).orderBy('sort_order');
     }
     return destination;
   },
 
   async findBySlug(slug) {
     const destination = await db(TABLE)
-      .select(
-        'destinations.*',
-        db.raw('ST_Y(location::geometry) as lat'),
-        db.raw('ST_X(location::geometry) as lng')
-      )
+      .select('destinations.*', db.raw('ST_Y(location::geometry) as lat'), db.raw('ST_X(location::geometry) as lng'))
       .where('destinations.slug', slug)
       .first();
-    
+
     if (destination) {
-      destination.images = await db('destination_images')
-        .where('destination_id', destination.id)
-        .orderBy('sort_order');
+      destination.images = await db('destination_images').where('destination_id', destination.id).orderBy('sort_order');
     }
     return destination;
   },
@@ -89,15 +77,14 @@ const Destination = {
     if (filters.status) {
       query.where('destinations.status', filters.status);
     }
-    
+
     if (filters.collaborator_id) {
-      query.where(function() {
-        this.where('destinations.status', 'published')
-            .orWhere('destinations.created_by', filters.collaborator_id);
+      query.where(function () {
+        this.where('destinations.status', 'published').orWhere('destinations.created_by', filters.collaborator_id);
       });
     }
     if (filters.search) {
-      query.where(function() {
+      query.where(function () {
         this.whereRaw("destinations.name->>'vi' ILIKE ?", [`%${filters.search}%`])
           .orWhereRaw("destinations.name->>'en' ILIKE ?", [`%${filters.search}%`])
           .orWhereRaw("destinations.name->>'ko' ILIKE ?", [`%${filters.search}%`])
@@ -108,7 +95,10 @@ const Destination = {
     }
 
     const { offset, limit, page } = require('../utils/pagination').paginate(
-      null, filters.page, filters.limit, filters.offset
+      null,
+      filters.page,
+      filters.limit,
+      filters.offset
     );
 
     // Count with same filters
@@ -123,7 +113,7 @@ const Destination = {
       countQuery.where('status', filters.status);
     }
     if (filters.search) {
-      countQuery.where(function() {
+      countQuery.where(function () {
         this.whereRaw("name->>'vi' ILIKE ?", [`%${filters.search}%`])
           .orWhereRaw("name->>'en' ILIKE ?", [`%${filters.search}%`])
           .orWhereRaw("description->>'vi' ILIKE ?", [`%${filters.search}%`]);
@@ -142,7 +132,8 @@ const Destination = {
   },
 
   async findNearby(lat, lng, radiusMeters = 5000) {
-    const items = await db.raw(`
+    const items = await db.raw(
+      `
       SELECT d.*,
         ST_Y(d.location::geometry) as lat,
         ST_X(d.location::geometry) as lng,
@@ -158,7 +149,9 @@ const Destination = {
         AND d.status = 'published'
       ORDER BY distance
       LIMIT 20
-    `, [lng, lat, lng, lat, radiusMeters]);
+    `,
+      [lng, lat, lng, lat, radiusMeters]
+    );
 
     return items.rows;
   },
@@ -169,6 +162,11 @@ const Destination = {
 
     // Remove lat/lng from data since they're stored in location column
     const { lat, lng, ...insertData } = data;
+
+    // Ensure JSON fields are properly serialized for PostgreSQL
+    if (insertData.image_urls && typeof insertData.image_urls === 'object') {
+      insertData.image_urls = JSON.stringify(insertData.image_urls);
+    }
 
     const [destination] = await db(TABLE)
       .insert({
@@ -190,14 +188,17 @@ const Destination = {
       delete updateData.lng;
     }
 
+    // Ensure JSON fields are properly serialized for PostgreSQL
+    if (updateData.image_urls && typeof updateData.image_urls === 'object') {
+      updateData.image_urls = JSON.stringify(updateData.image_urls);
+    }
+
     if (data.name && (data.name.vi || data.name.en)) {
       const existing = await this.findById(id);
       if (existing) {
         // BUG-12 FIX: JSONB from PostgreSQL may come back as object or string depending on driver.
         // Parse safely before comparing to avoid slug never being updated.
-        const existingName = typeof existing.name === 'string'
-          ? JSON.parse(existing.name)
-          : existing.name;
+        const existingName = typeof existing.name === 'string' ? JSON.parse(existing.name) : existing.name;
         const existingVi = existingName ? existingName.vi : null;
         if (existingVi !== data.name.vi) {
           updateData.slug = await generateUniqueSlug(data.name.vi || data.name.en, TABLE, db, id);
@@ -205,10 +206,7 @@ const Destination = {
       }
     }
 
-    const [destination] = await db(TABLE)
-      .where('id', id)
-      .update(updateData)
-      .returning('*');
+    const [destination] = await db(TABLE).where('id', id).update(updateData).returning('*');
 
     return destination;
   },
@@ -234,10 +232,7 @@ const Destination = {
       updateData.rejection_reason = null;
     }
 
-    const [destination] = await db(TABLE)
-      .where('id', id)
-      .update(updateData)
-      .returning('*');
+    const [destination] = await db(TABLE).where('id', id).update(updateData).returning('*');
 
     return destination;
   },
