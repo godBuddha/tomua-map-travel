@@ -47,6 +47,13 @@ jobs:
         env:
           DATABASE_URL: postgresql://tomua_admin:test_password@localhost:5432/tomua_tourism_test
 
+      - name: Seed test data
+        working-directory: ./server
+        run: npx knex seed:run
+        env:
+          DATABASE_URL: postgresql://tomua_admin:test_password@localhost:5432/tomua_tourism_test
+          ADMIN_PASSWORD: admin123456
+
       - name: Run tests
         working-directory: ./server
         run: npm test
